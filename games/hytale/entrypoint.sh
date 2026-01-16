@@ -89,7 +89,8 @@ train_aot() {
 			echo -e "Detected 'Hytale Server Booted'..."
 			touch ./Server/aot-retrained.info
 			rm -f ./Server/training.log
-			echo -e "Training finished. AOT cache created: HytaleServer.aot. Restarting server!"
+			echo -e "Training finished. AOT cache created: HytaleServer.aot. Restarting server in 5 seconds!"
+			sleep 5
 			kill -TERM ${PID}
 			break
 		fi

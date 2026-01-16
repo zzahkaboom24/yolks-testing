@@ -97,11 +97,8 @@ train_aot() {
 	echo -e "Training finished. Waiting for creation of AOT cache file..."
 	while [ ! -f "./Server/HytaleServer.aot" ]; do
     	sleep 1
-    	echo -n "."
 	done
 	echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
-	# I believe running this in the background to be fine because launching the training server, stopping it and waiting for the creation of the .aot file to be fine
-	( wait $PID ) &
 }
 
 if [ ! -f "./Server/aot-retrained.info" ]; then

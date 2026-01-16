@@ -34,7 +34,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/zzahkaboom24/games:${{ matrix.game }}
+            ghcr.io/zzahkaboom24/games-testing:${{ matrix.game }}
   pushAmd:
     name: "games:${{ matrix.game }}"
     runs-on: ubuntu-latest
@@ -61,4 +61,4 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/zzahkaboom24/games:${{ matrix.game }}
+            ghcr.io/zzahkaboom24/games-testing:${{ matrix.game }}

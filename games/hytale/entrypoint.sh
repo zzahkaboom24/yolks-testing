@@ -101,8 +101,10 @@ train_aot() {
 	echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
 }
 
-if [ ! -f "./Server/aot-retrained.info" ]; then
-    train_aot
+if [ "${USE_AOT_CACHE}" == "1" ]; then
+	if [ ! -f "./Server/aot-retrained.info" ]; then
+    	train_aot
+	fi
 fi
 
 /java.sh $@

@@ -92,16 +92,15 @@ train_aot() {
 			echo -e "Training finished. AOT cache created: HytaleServer.aot. Restarting server in 5 seconds!"
 			sleep 5
 			kill -TERM ${PID}
+			# I believe running this in the background to be fine because launching the training server, stopping it and waiting for at least 5 seconds to be sufficient for the .aot file
+			( wait $PID ) &
 			break
 		fi
 	done
-
-	wait ${PID}
 }
 
 if [ ! -f "./Server/aot-retrained.info" ]; then
     train_aot
 fi
-
 
 /java.sh $@

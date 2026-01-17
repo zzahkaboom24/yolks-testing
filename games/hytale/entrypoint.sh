@@ -101,11 +101,11 @@ train_aot() {
 
 	kill -TERM "$PID"
 	echo -e "Training finished. Waiting for creation of AOT cache file..."
-	wait "$PID"
 	while [[ ! -f "./Server/HytaleServer.aot" ]]; do
     	sleep 1
 	done
 	echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
+	wait "$PID"
 	exec 3<&-
 }
 

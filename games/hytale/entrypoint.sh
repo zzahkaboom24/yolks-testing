@@ -77,38 +77,40 @@ if [[ "${INSTALL_SOURCEQUERY_PLUGIN}" == "1" ]]; then
 	fi
 fi
 
+AOT_TRAINED=false
 # Re-train the Ahead-of-Time cache, because the one provided by Hytale can't load due to an "timestamp has changed" error
 train_aot() {
 	if [[ -f "./Server/HytaleServer.aot" ]]; then
 		rm -f ./Server/HytaleServer.aot
 	fi
-
+	
 	exec 3< <(
 		java -XX:AOTCacheOutput=Server/HytaleServer.aot -Xms128M $( ((SERVER_MEMORY)) && printf %s "-Xmx${SERVER_MEMORY}M" ) -jar Server/HytaleServer.jar $( ((HYTALE_ALLOW_OP)) && printf %s "--allow-op" ) $( ((HYTALE_ACCEPT_EARLY_PLUGINS)) && printf %s "--accept-early-plugins" ) $( ((DISABLE_SENTRY)) && printf %s "--disable-sentry" ) --auth-mode "${HYTALE_AUTH_MODE}" --assets Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1
 	)
 	PID=$!
-		
+
 	while IFS= read -r LINE <&3; do
 		echo "$LINE"
 		if [[ "$LINE" == *"Hytale Server Booted"* ]]; then
 			echo -e "Detected 'Hytale Server Booted'..."
-			touch ./Server/aot-retrained-ppid.info
+			AOT_TRAINED=true
+			jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
 			break
 		fi
 	done
 
-	kill -TERM "${PID}"
-	wait "$PID"
+	kill -TERM "$PID"
 	echo -e "Training finished. Waiting for creation of AOT cache file..."
+	wait "$PID"
 	while [[ ! -f "./Server/HytaleServer.aot" ]]; do
     	sleep 1
 	done
-	exec 3<&-
 	echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
+	exec 3<&-
 }
 
 if [[ "${USE_AOT_CACHE}" == "1" ]]; then
-	if [ ! -f "./Server/aot-retrained-ppid.info" ]; then
+	if [ "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json)" != "true" ]; then
     	train_aot
 	fi
 fi

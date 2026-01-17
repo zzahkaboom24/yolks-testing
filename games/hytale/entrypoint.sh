@@ -82,18 +82,24 @@ train_aot() {
 	if [[ -f "./Server/HytaleServer.aot" ]]; then
 		rm -f ./Server/HytaleServer.aot
 	fi
-	
+
 	java -XX:AOTCacheOutput=Server/HytaleServer.aot -Xms128M $( ((SERVER_MEMORY)) && printf %s "-Xmx${SERVER_MEMORY}M" ) -jar Server/HytaleServer.jar $( ((HYTALE_ALLOW_OP)) && printf %s "--allow-op" ) $( ((HYTALE_ACCEPT_EARLY_PLUGINS)) && printf %s "--accept-early-plugins" ) $( ((DISABLE_SENTRY)) && printf %s "--disable-sentry" ) --auth-mode "${HYTALE_AUTH_MODE}" --assets Assets.zip --bind "0.0.0.0:${SERVER_PORT}" \
 		2>&1 | while IFS= read -r LINE; do
 			echo "$LINE"
 			if [[ "$LINE" == *"Hytale Server Booted"* ]]; then
 				echo -e "Detected 'Hytale Server Booted'..."
 				touch ./Server/aot-retrained-ppid.info
-				kill -TERM "${PPID}"
+				JAVA_PID="${PPID}"
+				kill -TERM "${JAVA_PID}"
 				break
 			fi
+		done < <(true)
+
+	if [[ -n "${JAVA_PID}" ]]; then
+		echo -e "Waiting for Java process to fully exit..."
+		while kill -0 "${JAVA_PID}"; do
+			sleep 1
 		done
-		
 	echo -e "Training finished. Waiting for creation of AOT cache file..."
 	while [[ ! -f "./Server/HytaleServer.aot" ]]; do
     	sleep 1

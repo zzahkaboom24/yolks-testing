@@ -92,15 +92,21 @@ AOT_TRAINED=false
 train_aot() {
 	if [[ -f "./Server/HytaleServer.aot" ]]; then
 		rm -f ./Server/HytaleServer.aot
+	elif [[ -f "./Server/HytaleServer.aot.conf" ]]; then
+		rm -f ./Server/HytaleServer.aot.conf
+	elif [[ -f "./Server/training.log" ]]; then
+		rm -f ./Server/training.log
 	fi
 
 	: > ./Server/training.log
 
 	(
+		PID=$(pgrep -f "./Server/HytaleServer.jar")
 		tail -f ./Server/training.log | while read -r LINE; do
 			echo "$LINE"
 			if [[ "$LINE" == *"Hytale Server Booted"* ]]; then
 				echo -e "Detected 'Hytale Server Booted'..."
+				kill -TERM "$PID"
 				AOT_TRAINED=true
 				jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
 				rm -f ./Server/training.log
@@ -108,30 +114,10 @@ train_aot() {
 			fi
 		done
 
-		PID=$(pgrep -f "./Server/HytaleServer.jar")
-		echo -e "Triggering shutdown to generate AOT cache..."
-		kill -TERM "$PID"
-		wait "$PID"
-		
-		while [[ ! -f "./Server/HytaleServer.aot.config" ]]; do
-			sleep 1
-		done
-		
-		echo -e "Training finished. Waiting for creation of AOT cache file..."
-		TIMEOUT=30
-    	while [[ ! -f "./Server/HytaleServer.aot" ]] && (( TIMEOUT > 0 )); do
-        	sleep 1
-        	(( TIMEOUT-- ))
-    	done
 		if [[ ! -f "./Server/HytaleServer.aot" ]]; then
         	echo -e "AOT file not found after 30s."
 		else
 			echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
-			echo -e "The server can take up to 2 minutes or more to boot back up!"
-			echo -e "This only needs to be done when the server is freshly set up or after each update,"
-			echo -e "while Java Ahead-of-Time cache is enabled!"
-			echo -e "If neither of these conditions are met, or Java Ahead-of-Time cache is disabled,"
-			echo -e "boot times will be normal in these cases too!"
     	fi
 	) &
 	

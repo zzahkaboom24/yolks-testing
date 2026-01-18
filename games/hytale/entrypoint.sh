@@ -93,35 +93,48 @@ train_aot() {
 	if [[ -f "./Server/HytaleServer.aot" ]]; then
 		rm -f ./Server/HytaleServer.aot
 	fi
+
+	: > ./Server/training.log
+
+	(
+		while [[ ! -f "./Server/HytaleServer.aot.config" ]]; do
+			sleep 1
+		done
+		PID=$(pgrep -f "./Server/HytaleServer.jar")
+		tail -f ./Server/training.log | while read -r LINE; do
+			echo "$LINE"
+			if [[ "$LINE" == *"Hytale Server Booted"* ]]; then
+				echo -e "Detected 'Hytale Server Booted'..."
+				AOT_TRAINED=true
+				jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
+				rm -f ./Server/training.log
+				break
+			fi
+		done
+
+		echo -e "Triggering shutdown to generate AOT cache..."
+		kill -TERM "$PID"
+		wait "$PID"
+
+		echo -e "Training finished. Waiting for creation of AOT cache file..."
+		TIMEOUT=30
+    	while [[ ! -f "./Server/HytaleServer.aot" ]] && (( TIMEOUT > 0 )); do
+        	sleep 1
+        	(( TIMEOUT-- ))
+    	done
+		if [[ ! -f "./Server/HytaleServer.aot" ]]; then
+        	echo -e "AOT file not found after 30s."
+		else
+			echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
+			echo -e "The server can take up to 2 minutes or more to boot back up!"
+			echo -e "This only needs to be done when the server is freshly set up or after each update,"
+			echo -e "while Java Ahead-of-Time cache is enabled!"
+			echo -e "If neither of these conditions are met, or Java Ahead-of-Time cache is disabled,"
+			echo -e "boot times will be normal in these cases too!"
+    	fi
+	) &
 	
-	exec 3< <(
-		java -XX:AOTCacheOutput=Server/HytaleServer.aot -Xms128M $( ((SERVER_MEMORY)) && printf %s "-Xmx${SERVER_MEMORY}M" ) -jar Server/HytaleServer.jar $( ((HYTALE_ALLOW_OP)) && printf %s "--allow-op" ) $( ((HYTALE_ACCEPT_EARLY_PLUGINS)) && printf %s "--accept-early-plugins" ) $( ((DISABLE_SENTRY)) && printf %s "--disable-sentry" ) --auth-mode "${HYTALE_AUTH_MODE}" --assets Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1
-	)
-	PID=$!
-
-	while IFS= read -r LINE <&3; do
-		echo "$LINE"
-		if [[ "$LINE" == *"Hytale Server Booted"* ]]; then
-			echo -e "Detected 'Hytale Server Booted'..."
-			AOT_TRAINED=true
-			jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
-			break
-		fi
-	done
-
-	kill -TERM "$PID"
-	echo -e "Training finished. Waiting for creation of AOT cache file..."
-	while [[ ! -f "./Server/HytaleServer.aot" ]]; do
-    	sleep 1
-	done
-	echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
-	echo -e "The server can take up to 2 minutes or more to boot back up!"
-	echo -e "This only needs to be done when the server is freshly set up or after each update,"
-	echo -e "while Java Ahead-of-Time cache is enabled!"
-	echo -e "If neither of these conditions are met, or Java Ahead-of-Time cache is disabled,"
-	echo -e "boot times will be normal in these cases too!"
-	wait "$PID"
-	exec 3<&-
+	java -XX:AOTCacheOutput=./Server/HytaleServer.aot -Xms128M $( ((SERVER_MEMORY)) && printf %s "-Xmx${SERVER_MEMORY}M" ) -jar ./Server/HytaleServer.jar $( ((HYTALE_ALLOW_OP)) && printf %s "--allow-op" ) $( ((HYTALE_ACCEPT_EARLY_PLUGINS)) && printf %s "--accept-early-plugins" ) $( ((DISABLE_SENTRY)) && printf %s "--disable-sentry" ) --auth-mode "${HYTALE_AUTH_MODE}" --assets ./Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1 | tee ./Server/training.log
 }
 
 if [[ "${USE_AOT_CACHE}" == "1" ]]; then

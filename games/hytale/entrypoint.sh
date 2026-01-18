@@ -97,10 +97,6 @@ train_aot() {
 	: > ./Server/training.log
 
 	(
-		while [[ ! -f "./Server/HytaleServer.aot.config" ]]; do
-			sleep 1
-		done
-		PID=$(pgrep -f "./Server/HytaleServer.jar")
 		tail -f ./Server/training.log | while read -r LINE; do
 			echo "$LINE"
 			if [[ "$LINE" == *"Hytale Server Booted"* ]]; then
@@ -111,6 +107,11 @@ train_aot() {
 				break
 			fi
 		done
+		
+		while [[ ! -f "./Server/HytaleServer.aot.config" ]]; do
+			sleep 1
+		done
+		PID=$(pgrep -f "./Server/HytaleServer.jar")
 
 		echo -e "Triggering shutdown to generate AOT cache..."
 		kill -TERM "$PID"

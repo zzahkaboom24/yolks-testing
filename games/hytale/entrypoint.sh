@@ -54,13 +54,15 @@ fi
 if [[ "$HYTALE_MOUNT" == true ]]; then
 	if [[ -f "HytaleMount/HytaleServer.zip" ]]; then
 		unzip -o HytaleMount/HytaleServer.zip -d .
-	elif [[ -f "HytaleMount/Assets.zip" ]]; then
+	fi
+	if [[ -f "HytaleMount/Assets.zip" ]]; then
 		ln -s -f HytaleMount/Assets.zip Assets.zip
 	fi
 else
 	if [[ -f "Server/Assets.zip" ]]; then
 		ln -s -f Server/Assets.zip Assets.zip
-	elif [[ -f "HytaleServer.zip" ]]; then
+	fi
+	if [[ -f "HytaleServer.zip" ]]; then
 		unzip -o HytaleServer.zip -d .
 	fi
 fi
@@ -92,9 +94,11 @@ AOT_TRAINED=false
 train_aot() {
 	if [[ -f "./Server/HytaleServer.aot" ]]; then
 		rm -f ./Server/HytaleServer.aot
-	elif [[ -f "./Server/HytaleServer.aot.conf" ]]; then
+	fi
+	if [[ -f "./Server/HytaleServer.aot.conf" ]]; then
 		rm -f ./Server/HytaleServer.aot.conf
-	elif [[ -f "./Server/training.log" ]]; then
+	fi
+	if [[ -f "./Server/training.log" ]]; then
 		rm -f ./Server/training.log
 	fi
 
@@ -128,15 +132,8 @@ train_aot() {
 			echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
     	fi
 	) &
-
-	MAX_HEAP=16384
-	if (( SERVER_MEMORY > MAX_HEAP )); then
-		MAX_HEAP=16384
-	else
-		MAX_HEAP=$SERVER_MEMORY
-	fi
 	
-	java -XX:AOTCacheOutput=./Server/HytaleServer.aot -Xms128M -Xmx${MAX_HEAP}M -jar ./Server/HytaleServer.jar $( ((HYTALE_ALLOW_OP)) && printf %s "--allow-op" ) $( ((HYTALE_ACCEPT_EARLY_PLUGINS)) && printf %s "--accept-early-plugins" ) $( ((DISABLE_SENTRY)) && printf %s "--disable-sentry" ) --auth-mode "${HYTALE_AUTH_MODE}" --assets ./Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1 | tee ./Server/training.log
+	java -XX:AOTCacheOutput=./Server/HytaleServer.aot -Xms128M $( ((SERVER_MEMORY)) && printf %s "-Xmx${SERVER_MEMORY}M" ) -jar ./Server/HytaleServer.jar $( ((HYTALE_ALLOW_OP)) && printf %s "--allow-op" ) $( ((HYTALE_ACCEPT_EARLY_PLUGINS)) && printf %s "--accept-early-plugins" ) $( ((DISABLE_SENTRY)) && printf %s "--disable-sentry" ) --auth-mode "${HYTALE_AUTH_MODE}" --assets ./Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1 | tee ./Server/training.log
 }
 
 if [[ "${USE_AOT_CACHE}" == "1" ]]; then

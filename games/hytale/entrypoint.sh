@@ -132,8 +132,21 @@ train_aot() {
 			echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
     	fi
 	) &
+
+	MAX_HEAP=32768
+	if (( SERVER_MEMORY > MAX_HEAP )); then
+		MAX_HEAP=32768
+	else
+		MAX_HEAP=$SERVER_MEMORY
+	fi
+	TRAINING_COMPRESSION=""
+	if (( SERVER_MEMORY > 32768 )); then
+		TRAINING_COMPRESSION="-XX:-UseCompressedOops -XX:-UseCompressedClassPointers"
+	else
+		TRAINING_COMPRESSION="-XX:+UseCompressedOops -XX:+UseCompressedClassPointers"
+	fi
 	
-	java -XX:AOTCacheOutput=./Server/HytaleServer.aot -Xms128M $( ((SERVER_MEMORY)) && printf %s "-Xmx${SERVER_MEMORY}M" ) -jar ./Server/HytaleServer.jar $( ((HYTALE_ALLOW_OP)) && printf %s "--allow-op" ) $( ((HYTALE_ACCEPT_EARLY_PLUGINS)) && printf %s "--accept-early-plugins" ) $( ((DISABLE_SENTRY)) && printf %s "--disable-sentry" ) --auth-mode "${HYTALE_AUTH_MODE}" --assets ./Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1 | tee ./Server/training.log
+	java -XX:AOTCacheOutput=./Server/HytaleServer.aot $TRAINING_COMPRESSION -Xms128M -Xmx${MAX_HEAP}M -jar ./Server/HytaleServer.jar $( ((HYTALE_ALLOW_OP)) && printf %s "--allow-op" ) $( ((HYTALE_ACCEPT_EARLY_PLUGINS)) && printf %s "--accept-early-plugins" ) $( ((DISABLE_SENTRY)) && printf %s "--disable-sentry" ) --auth-mode "${HYTALE_AUTH_MODE}" --assets ./Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1 | tee ./Server/training.log
 }
 
 if [[ "${USE_AOT_CACHE}" == "1" ]]; then

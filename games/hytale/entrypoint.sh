@@ -9,6 +9,8 @@ if [[ -f "./HytaleMount/HytaleServer.zip" || -f "./HytaleMount/Assets.zip" ]]; t
 	HYTALE_MOUNT=true
 fi
 
+LATEST_VERSION=""
+CURRENT_VERSION=""
 # Default to downloading (unless we find matching version)
 NEEDS_DOWNLOAD=true
 
@@ -133,9 +135,9 @@ train_aot() {
     	fi
 	) &
 
-	MAX_HEAP=32768
+	MAX_HEAP=31744
 	if (( SERVER_MEMORY > MAX_HEAP )); then
-		MAX_HEAP=32768
+		MAX_HEAP=31744
 	else
 		MAX_HEAP=$SERVER_MEMORY
 	fi
@@ -144,14 +146,14 @@ train_aot() {
 }
 
 if [[ "${USE_AOT_CACHE}" == "1" ]]; then
-	if (( SERVER_MEMORY > 32768 )); then
+	if (( SERVER_MEMORY > 31744 )); then
 		export JAVA_TOOL_OPTIONS="-XX:-UseCompressedOops -XX:-UseCompressedClassPointers"
 	else
 		export JAVA_TOOL_OPTIONS="-XX:+UseCompressedOops -XX:+UseCompressedClassPointers"
 	fi
-	if [[ "$NEEDS_DOWNLOAD" == true || ! -f config.json ]]; then
+	if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" || ! -f config.json ]]; then
 		train_aot
-	elif [[ -f config.json && "$NEEDS_DOWNLOAD" == false ]]; then
+	elif [[ -f config.json && "$CURRENT_VERSION" == "$LATEST_VERSION" ]]; then
 		if [[ "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json)" != "true" ]]; then
 			train_aot
 		fi

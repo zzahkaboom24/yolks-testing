@@ -9,13 +9,47 @@ if [[ -f "./HytaleMount/HytaleServer.zip" || -f "./HytaleMount/Assets.zip" ]]; t
 	HYTALE_MOUNT=true
 fi
 
-LATEST_VERSION=""
-CURRENT_VERSION=""
 # Default to downloading (unless we find matching version)
 NEEDS_DOWNLOAD=true
 
 # If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
 if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
+	if [[ "$(uname -m)" == "aarch64" ]]; then
+		HYTALE_DOWNLOADER="qemu-x86_64-static ./hytale-downloader/hytale-downloader-linux"
+	else
+		HYTALE_DOWNLOADER="./hytale-downloader/hytale-downloader-linux"
+	fi
+	
+	if [[ -f "./Server/HytaleServer.jar" ]]; then
+	LATEST_VERSION=$($HYTALE_DOWNLOADER -print-version)
+		if [[ -f config.json ]]; then
+			if [[ "$(jq -r '.ServerVersion // ""' config.json)" != "" ]]; then
+				CURRENT_VERSION=$(jq -r '.ServerVersion' config.json)
+			else
+				CURRENT_VERSION=$(java -jar ./Server/HytaleServer.jar --version | awk '{print $2}' | sed 's/^v//')
+			fi
+		else
+			CURRENT_VERSION=$(java -jar ./Server/HytaleServer.jar --version | awk '{print $2}' | sed 's/^v//')
+		fi
+		if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" ]]; then
+			NEEDS_DOWNLOAD=true
+		else
+        	NEEDS_DOWNLOAD=false
+		fi
+	fi
+
+	if [[ "$NEEDS_DOWNLOAD" == true ]]; then
+		if [[ -f "./Server/HytaleServer.jar" ]]; then
+			rm -rf ./Server/*
+		fi
+		$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -download-path HytaleServer.zip
+	fi
+
+	if [[ -f "HytaleServer.zip" ]]; then
+		unzip -o HytaleServer.zip -d .
+		rm -f HytaleServer.zip
+	fi
+else
 	if [[ "$(uname -m)" == "aarch64" ]]; then
 		HYTALE_DOWNLOADER="qemu-x86_64-static ./hytale-downloader/hytale-downloader-linux"
 	else

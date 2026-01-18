@@ -101,12 +101,10 @@ train_aot() {
 	: > ./Server/training.log
 
 	(
-		PID=$(pgrep -f "./Server/HytaleServer.jar")
 		tail -f ./Server/training.log | while read -r LINE; do
 			echo "$LINE"
 			if [[ "$LINE" == *"Hytale Server Booted"* ]]; then
 				echo -e "Detected 'Hytale Server Booted'..."
-				kill -TERM "$PID"
 				AOT_TRAINED=true
 				jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
 				rm -f ./Server/training.log
@@ -114,14 +112,31 @@ train_aot() {
 			fi
 		done
 
+		PID=$(pgrep -f "./Server/HytaleServer.jar")
+		echo -e "Triggering shutdown to generate AOT cache..."
+		kill -TERM "$PID"
+		
+		echo -e "Training finished. Waiting for creation of AOT cache file..."
+		TIMEOUT=30
+    	while [[ ! -f "./Server/HytaleServer.aot" ]] && (( TIMEOUT > 0 )); do
+        	sleep 1
+        	(( TIMEOUT-- ))
+    	done
 		if [[ ! -f "./Server/HytaleServer.aot" ]]; then
         	echo -e "AOT file not found after 30s."
 		else
 			echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
     	fi
 	) &
+
+	MAX_HEAP=16384
+	if (( SERVER_MEMORY > MAX_HEAP )); then
+		MAX_HEAP=16384
+	else
+		MAX_HEAP=$SERVER_MEMORY
+	fi
 	
-	java -XX:AOTCacheOutput=./Server/HytaleServer.aot -Xms128M $( ((SERVER_MEMORY)) && printf %s "-Xmx${SERVER_MEMORY}M" ) -jar ./Server/HytaleServer.jar $( ((HYTALE_ALLOW_OP)) && printf %s "--allow-op" ) $( ((HYTALE_ACCEPT_EARLY_PLUGINS)) && printf %s "--accept-early-plugins" ) $( ((DISABLE_SENTRY)) && printf %s "--disable-sentry" ) --auth-mode "${HYTALE_AUTH_MODE}" --assets ./Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1 | tee ./Server/training.log
+	java -XX:AOTCacheOutput=./Server/HytaleServer.aot -Xms128M -Xmx${MAX_HEAP}M -jar ./Server/HytaleServer.jar $( ((HYTALE_ALLOW_OP)) && printf %s "--allow-op" ) $( ((HYTALE_ACCEPT_EARLY_PLUGINS)) && printf %s "--accept-early-plugins" ) $( ((DISABLE_SENTRY)) && printf %s "--disable-sentry" ) --auth-mode "${HYTALE_AUTH_MODE}" --assets ./Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1 | tee ./Server/training.log
 }
 
 if [[ "${USE_AOT_CACHE}" == "1" ]]; then

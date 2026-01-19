@@ -49,42 +49,6 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 		unzip -o HytaleServer.zip -d .
 		rm -f HytaleServer.zip
 	fi
-else
-	if [[ "$(uname -m)" == "aarch64" ]]; then
-		HYTALE_DOWNLOADER="qemu-x86_64-static ./hytale-downloader/hytale-downloader-linux"
-	else
-		HYTALE_DOWNLOADER="./hytale-downloader/hytale-downloader-linux"
-	fi
-	
-	if [[ -f "./Server/HytaleServer.jar" ]]; then
-	LATEST_VERSION=$($HYTALE_DOWNLOADER -print-version)
-		if [[ -f config.json ]]; then
-			if [[ "$(jq -r '.ServerVersion // ""' config.json)" != "" ]]; then
-				CURRENT_VERSION=$(jq -r '.ServerVersion' config.json)
-			else
-				CURRENT_VERSION=$(java -jar ./Server/HytaleServer.jar --version | awk '{print $2}' | sed 's/^v//')
-			fi
-		else
-			CURRENT_VERSION=$(java -jar ./Server/HytaleServer.jar --version | awk '{print $2}' | sed 's/^v//')
-		fi
-		if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" ]]; then
-			NEEDS_DOWNLOAD=true
-		else
-        	NEEDS_DOWNLOAD=false
-		fi
-	fi
-
-	if [[ "$NEEDS_DOWNLOAD" == true ]]; then
-		if [[ -f "./Server/HytaleServer.jar" ]]; then
-			rm -rf ./Server/*
-		fi
-		$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -download-path HytaleServer.zip
-	fi
-
-	if [[ -f "HytaleServer.zip" ]]; then
-		unzip -o HytaleServer.zip -d .
-		rm -f HytaleServer.zip
-	fi
 fi
 
 if [[ "$HYTALE_MOUNT" == true ]]; then
@@ -117,12 +81,29 @@ if [[ "${INSTALL_SOURCEQUERY_PLUGIN}" == "1" ]]; then
 	fi
 fi
 
-if [[ -f config.json ]]; then
-	if [[ -n "$HYTALE_MAX_VIEW_RADIUS" ]]; then
-		jq --argjson maxviewradius "$HYTALE_MAX_VIEW_RADIUS" '.MaxViewRadius = $maxviewradius' config.json > config.tmp.json && mv config.tmp.json config.json
+# This section restores custom values in the config.json
+# Custom values are lost if an user runs /auth persistence Memory/Encrypted
+if [[ -f config.json && -f config.json.bak ]]; then
+	# Restore AheadOfTimeCacheTrained
+	if [[ "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json)" != "true" ]]; then
+		if [[ "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json.bak)" == "true" ]]; then
+			if [[ -f ./Server/training.log ]]; then
+				AOT_TRAINED=true
+				jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
+				rm -f ./Server/training.log
+			else
+				AOT_TRAINED=true
+				jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
+			fi
+		fi
 	fi
-	LATEST_VERSION=$($HYTALE_DOWNLOADER -print-version)
-	jq --arg version "$LATEST_VERSION" '.ServerVersion = $version' config.json > config.tmp.json && mv config.tmp.json config.json
+	# Restore ServerVersion
+	if [[ "$(jq -r '.ServerVersion // ""' config.json)" == "" ]]; then
+		if [[ "$(jq -r '.ServerVersion // ""' config.json.bak)" != "" ]]; then
+			BACKUPPED_VERSION=$(jq -r '.ServerVersion // ""' config.json.bak)
+			jq --arg version "$BACKUPPED_VERSION" '.ServerVersion = $version' config.json > config.tmp.json && mv config.tmp.json config.json
+		fi
+	fi
 fi
 
 AOT_TRAINED=false
@@ -138,16 +119,13 @@ train_aot() {
 		rm -f ./Server/training.log
 	fi
 
-	: > ./Server/training.log
+	touch ./Server/training.log
 
 	(
 		tail -f ./Server/training.log | while read -r LINE; do
 			echo "$LINE"
 			if [[ "$LINE" == *"Hytale Server Booted"* ]]; then
 				echo -e "Detected 'Hytale Server Booted'..."
-				AOT_TRAINED=true
-				jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
-				rm -f ./Server/training.log
 				break
 			fi
 		done
@@ -155,18 +133,7 @@ train_aot() {
 		PID=$(pgrep -f "./Server/HytaleServer.jar")
 		echo -e "Triggering shutdown to generate AOT cache..."
 		kill -TERM "$PID"
-		
 		echo -e "Training finished. Waiting for creation of AOT cache file..."
-		TIMEOUT=30
-    	while [[ ! -f "./Server/HytaleServer.aot" ]] && (( TIMEOUT > 0 )); do
-        	sleep 1
-        	(( TIMEOUT-- ))
-    	done
-		if [[ ! -f "./Server/HytaleServer.aot" ]]; then
-        	echo -e "AOT file not found after 30s."
-		else
-			echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
-    	fi
 	) &
 
 	MAX_HEAP=31744
@@ -176,7 +143,18 @@ train_aot() {
 		MAX_HEAP=$SERVER_MEMORY
 	fi
 	
-	java -XX:AOTCacheOutput=./Server/HytaleServer.aot -Xms128M -Xmx${MAX_HEAP}M -jar ./Server/HytaleServer.jar $( ((HYTALE_ALLOW_OP)) && printf %s "--allow-op" ) $( ((HYTALE_ACCEPT_EARLY_PLUGINS)) && printf %s "--accept-early-plugins" ) $( ((DISABLE_SENTRY)) && printf %s "--disable-sentry" ) --auth-mode "${HYTALE_AUTH_MODE}" --assets ./Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1 | tee ./Server/training.log
+	java -XX:AOTCacheOutput=./Server/HytaleServer.aot -Xms128M -Xmx"${MAX_HEAP}"M -jar ./Server/HytaleServer.jar $( ((HYTALE_ALLOW_OP)) && printf %s "--allow-op" ) $( ((HYTALE_ACCEPT_EARLY_PLUGINS)) && printf %s "--accept-early-plugins" ) $( ((DISABLE_SENTRY)) && printf %s "--disable-sentry" ) --auth-mode "${HYTALE_AUTH_MODE}" --assets ./Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1 | tee ./Server/training.log
+
+	TIMEOUT=30
+	while [[ ! -f "./Server/HytaleServer.aot" ]] && (( TIMEOUT > 0 )); do
+		sleep 1
+		(( TIMEOUT-- ))
+	done
+	if [[ ! -f "./Server/HytaleServer.aot" ]]; then
+		echo -e "AOT file not found after 30s."
+	else
+		echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
+	fi
 }
 
 if [[ "${USE_AOT_CACHE}" == "1" ]]; then
@@ -185,13 +163,27 @@ if [[ "${USE_AOT_CACHE}" == "1" ]]; then
 	else
 		export JAVA_TOOL_OPTIONS="-XX:+UseCompressedOops -XX:+UseCompressedClassPointers"
 	fi
-	if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" || ! -f config.json ]]; then
+	if [[ ! -f config.json || ! -f ./Server/HytaleServer.aot || "$NEEDS_DOWNLOAD" == true ]]; then
 		train_aot
-	elif [[ -f config.json && "$CURRENT_VERSION" == "$LATEST_VERSION" ]]; then
+	elif [[ -f config.json && "$NEEDS_DOWNLOAD" == false ]]; then
 		if [[ "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json)" != "true" ]]; then
 			train_aot
 		fi
 	fi
 fi
 
+if [[ -f ./Server/training.log && -f config.json ]]; then
+		AOT_TRAINED=true
+		jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
+		rm -f ./Server/training.log
+fi
+
+if [[ -f config.json ]]; then
+	if [[ -n "$HYTALE_MAX_VIEW_RADIUS" ]]; then
+		jq --argjson maxviewradius "$HYTALE_MAX_VIEW_RADIUS" '.MaxViewRadius = $maxviewradius' config.json > config.tmp.json && mv config.tmp.json config.json
+	fi
+	LATEST_VERSION=$($HYTALE_DOWNLOADER -print-version)
+	jq --arg version "$LATEST_VERSION" '.ServerVersion = $version' config.json > config.tmp.json && mv config.tmp.json config.json
+fi
+	
 /java.sh $@

@@ -6,7 +6,9 @@ cd /home/container
 
 # If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
 if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
-        
+
+	# Running the file once to trigger authentication
+	./hytale-downloader/hytale-downloader-linux
 	curversion=$(./hytale-downloader/hytale-downloader-linux -print-version)
         
 	if ! [[ -e version ]] || [ "$curversion" != "$(cat "version")" ]; then

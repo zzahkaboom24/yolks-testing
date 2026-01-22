@@ -32,14 +32,17 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 			CURRENT_VERSION=$(java -jar ./Server/HytaleServer.jar --version | awk '{print $2}' | sed 's/^v//')
 		fi
 		if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" ]]; then
-			echo -e "Game is out-of-date!"
+			echo -e "Server is out-of-date!"
 			echo -e "Currently installed: $CURRENT_VERSION"
 			echo -e "Latest available: $LATEST_VERSION"
 			NEEDS_DOWNLOAD=true
 		else
-			echo -e "Game is up-to-date!"
+			echo -e "Server is up-to-date!"
         	NEEDS_DOWNLOAD=false
 		fi
+	else
+		echo -e "Server has not yet been installed!"
+		echo -e "Attempting install!"
 	fi
 
 	if [[ "$NEEDS_DOWNLOAD" == true ]]; then

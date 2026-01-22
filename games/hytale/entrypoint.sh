@@ -184,6 +184,9 @@ if [[ "${USE_AOT_CACHE}" == "1" ]]; then
 			train_aot
 		fi
 	fi
+else
+	AOT_TRAINED=false
+	jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
 fi
 
 if [[ -f ./Server/training.log && -f config.json ]]; then

@@ -32,8 +32,12 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 			CURRENT_VERSION=$(java -jar ./Server/HytaleServer.jar --version | awk '{print $2}' | sed 's/^v//')
 		fi
 		if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" ]]; then
+			echo -e "Game is out-of-date!"
+			echo -e "Currently installed: $CURRENT_VERSION"
+			echo -e "Latest available: $LATEST_VERSION"
 			NEEDS_DOWNLOAD=true
 		else
+			echo -e "Game is up-to-date!"
         	NEEDS_DOWNLOAD=false
 		fi
 	fi
@@ -139,6 +143,13 @@ train_aot() {
 	MAX_HEAP=31744
 	if (( SERVER_MEMORY > MAX_HEAP )); then
 		MAX_HEAP=31744
+	elif (( SERVER_MEMORY == 0 )); then
+		MAX_HEAP=$(free -m | awk '/Mem:/ {print $2}')
+		if (( MAX_HEAP > 31744 )); then
+			TEST=free -m | awk '/Mem:/ {print $2}'
+			echo -e "We have this amount of RAM available: $TEST"
+			MAX_HEAP=31744
+		fi
 	else
 		MAX_HEAP=$SERVER_MEMORY
 	fi

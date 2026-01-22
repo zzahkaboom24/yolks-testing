@@ -92,23 +92,17 @@ fi
 # Custom values are lost if an user runs /auth persistence Memory/Encrypted
 if [[ -f config.json && -f config.json.bak ]]; then
 	# Restore AheadOfTimeCacheTrained
-	if [[ "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json)" != "true" ]]; then
-		if [[ "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json.bak)" == "true" ]]; then
-			if [[ -f ./Server/training.log ]]; then
-				AOT_TRAINED=true
-				jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
-				rm -f ./Server/training.log
-			else
-				AOT_TRAINED=true
-				jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
-			fi
+	if [[ -z "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json)" ]]; then
+		if [[ ! -z "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json.bak)" ]]; then
+			AOT_BACKUP_FLAG=$(jq -r '.AheadOfTimeCacheTrained' config.json.bak)
+			jq --argjson trainaot "$AOT_BACKUP_FLAG" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
 		fi
 	fi
 	# Restore ServerVersion
 	if [[ "$(jq -r '.ServerVersion // ""' config.json)" == "" ]]; then
 		if [[ "$(jq -r '.ServerVersion // ""' config.json.bak)" != "" ]]; then
-			BACKUPPED_VERSION=$(jq -r '.ServerVersion // ""' config.json.bak)
-			jq --arg version "$BACKUPPED_VERSION" '.ServerVersion = $version' config.json > config.tmp.json && mv config.tmp.json config.json
+			SV_BACKUP_FLAG=$(jq -r '.ServerVersion // ""' config.json.bak)
+			jq --arg version "$SV_BACKUP_FLAG" '.ServerVersion = $version' config.json > config.tmp.json && mv config.tmp.json config.json
 		fi
 	fi
 fi

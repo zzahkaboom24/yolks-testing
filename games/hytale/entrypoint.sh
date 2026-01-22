@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -x
 
 cd /home/container
 
@@ -8,8 +7,8 @@ cd /home/container
 if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 
 	# Running the version check without storing it once to run the authentication
-	./hytale-downloader/hytale-downloader-linux -print-version
-	curversion=$(./hytale-downloader/hytale-downloader-linux -print-version)
+	./hytale-downloader/hytale-downloader-linux -patchline "$HYTALE_PATCHLINE" -print-version
+	curversion=$(./hytale-downloader/hytale-downloader-linux -patchline "$HYTALE_PATCHLINE" -print-version)
         
 	if ! [[ -e version ]] || [ "$curversion" != "$(cat "version")" ]; then
 		./hytale-downloader/hytale-downloader-linux -patchline "$HYTALE_PATCHLINE" -download-path HytaleServer.zip

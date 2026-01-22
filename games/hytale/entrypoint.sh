@@ -107,6 +107,7 @@ if [[ -f config.json && -f config.json.bak ]]; then
 	fi
 fi
 
+MAX_HEAP=31744
 AOT_TRAINED=false
 # Re-train the Ahead-of-Time cache, because the one provided by Hytale can't load due to an "timestamp has changed" error
 train_aot() {
@@ -137,14 +138,11 @@ train_aot() {
 		echo -e "Training finished. Waiting for creation of AOT cache file..."
 	) &
 
-	MAX_HEAP=31744
 	if (( SERVER_MEMORY > MAX_HEAP )); then
 		MAX_HEAP=31744
 	elif (( SERVER_MEMORY == 0 )); then
 		MAX_HEAP=$(free -m | awk '/Mem:/ {print $2}')
 		if (( MAX_HEAP > 31744 )); then
-			TEST=$(free -m | awk '/Mem:/ {print $2}')
-			echo -e "We have this amount of RAM available: $TEST"
 			MAX_HEAP=31744
 		fi
 	else
@@ -168,6 +166,13 @@ train_aot() {
 if [[ "${USE_AOT_CACHE}" == "1" ]]; then
 	if (( SERVER_MEMORY > 31744 )); then
 		export JAVA_TOOL_OPTIONS="-XX:-UseCompressedOops -XX:-UseCompressedClassPointers"
+	elif (( SERVER_MEMORY == 0 )); then
+		MAX_HEAP=$(free -m | awk '/Mem:/ {print $2}')
+		if (( MAX_HEAP > 31744 )); then
+			export JAVA_TOOL_OPTIONS="-XX:-UseCompressedOops -XX:-UseCompressedClassPointers"
+		else
+			export JAVA_TOOL_OPTIONS="-XX:+UseCompressedOops -XX:+UseCompressedClassPointers"
+		fi
 	else
 		export JAVA_TOOL_OPTIONS="-XX:+UseCompressedOops -XX:+UseCompressedClassPointers"
 	fi

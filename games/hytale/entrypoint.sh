@@ -143,7 +143,7 @@ train_aot() {
 	elif (( SERVER_MEMORY == 0 )); then
 		MAX_HEAP=$(free -m | awk '/Mem:/ {print $2}')
 		if (( MAX_HEAP > 31744 )); then
-			TEST=free -m | awk '/Mem:/ {print $2}'
+			TEST=$(free -m | awk '/Mem:/ {print $2}')
 			echo -e "We have this amount of RAM available: $TEST"
 			MAX_HEAP=31744
 		fi

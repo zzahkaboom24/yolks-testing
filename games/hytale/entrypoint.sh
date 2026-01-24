@@ -9,11 +9,10 @@ if [[ -f "./HytaleMount/HytaleServer.zip" || -f "./HytaleMount/Assets.zip" ]]; t
 	HYTALE_MOUNT=true
 fi
 
-PATCHLINE_CONFIG="${HYTALE_PATCHLINE:-release}"
 if [[ -f config.json && ! -z "$(jq -r '.Update.Patchline // ""' config.json)" ]]; then
-	PATCHLINE_CONFIG=$(jq -r '.Update.Patchline // ""' config.json)
+	HYTALE_PATCHLINE=$(jq -r '.Update.Patchline // ""' config.json)
 elif [[ -f config.json && -z "$(jq -r '.Update.Patchline // ""' config.json)" ]]; then
-	jq --arg version "$PATCHLINE_CONFIG" '.Update.Patchline = $version' config.json > config.tmp.json && mv config.tmp.json config.json
+	jq --arg version "$HYTALE_PATCHLINE" '.Update.Patchline = $version' config.json > config.tmp.json && mv config.tmp.json config.json
 fi
 
 # Default to downloading (unless we find matching version)
@@ -28,7 +27,7 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 	fi
 	
 	$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version
-	LATEST_VERSION=$($HYTALE_DOWNLOADER -patchline "$PATCHLINE_CONFIG" -print-version)
+	LATEST_VERSION=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version)
 
 	# Apply staged update if present
 	if [[ -f "./updater/staging/Server/HytaleServer.jar" ]]; then
@@ -75,7 +74,7 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 
 	if [[ "$NEEDS_DOWNLOAD" == true ]]; then
 		rm -rf ./Server/*
-		$HYTALE_DOWNLOADER -patchline "$PATCHLINE_CONFIG" -download-path HytaleServer.zip
+		$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -download-path HytaleServer.zip
 	fi
 
 	if [[ -f "HytaleServer.zip" ]]; then

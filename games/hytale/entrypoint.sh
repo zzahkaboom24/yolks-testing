@@ -99,6 +99,13 @@ else
 	fi
 fi
 
+if [[ -f start.bat ]]; then
+	rm start.bat
+fi
+if [[ -f start.sh ]]; then
+	rm start.sh
+fi
+
 # Download the latest hytale-sourcequery plugin if enabled
 if [[ "${INSTALL_SOURCEQUERY_PLUGIN}" == "1" ]]; then
 	mkdir -p mods

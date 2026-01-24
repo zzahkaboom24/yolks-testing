@@ -44,12 +44,12 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 		if [[ -f "./updater/staging/Assets.zip" ]]; then
 			cp -f ./updater/staging/Assets.zip ./
 		fi
-		if [[ -f "./updater/staging/start.sh" ]]; then
-			cp -f ./updater/staging/start.sh ./
-		fi
-		if [[ -f "./updater/staging/start.bat" ]]; then
-			cp -f ./updater/staging/start.bat ./
-		fi
+		#if [[ -f "./updater/staging/start.sh" ]]; then
+		#	cp -f ./updater/staging/start.sh ./
+		#fi
+		#if [[ -f "./updater/staging/start.bat" ]]; then
+		#	cp -f ./updater/staging/start.bat ./
+		#fi
 		
 		rm -rf ./updater/staging
 		NEEDS_DOWNLOAD=false

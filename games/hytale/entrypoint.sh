@@ -26,9 +26,9 @@ NEEDS_AOT=false
 # If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
 if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 	if [[ "$(uname -m)" == "aarch64" ]]; then
-		HYTALE_DOWNLOADER="qemu-x86_64-static ./hytale-downloader/hytale-downloader-linux"
+		HYTALE_DOWNLOADER="qemu-x86_64-static /home/container/hytale-downloader/hytale-downloader-linux"
 	else
-		HYTALE_DOWNLOADER="./hytale-downloader/hytale-downloader-linux"
+		HYTALE_DOWNLOADER="/home/container/hytale-downloader/hytale-downloader-linux"
 	fi
 
 	cd /home/container/hytale-downloader

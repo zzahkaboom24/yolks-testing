@@ -254,7 +254,7 @@ if [[ -f ./config.json ]]; then
 	fi
 fi
 
-if [[ "${STARTUP:-}" == *Server/HytaleServer.jar* || "${0}" == *Server/HytaleServer.jar* ]]; then
+if [[ "${STARTUP:-}" =~ -jar\ Server/HytaleServer\.jar || "${0}" =~ -jar\ Server/HytaleServer\.jar ]]; then
   echo ""
   echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
   echo "!!                        OUTDATED STARTUP DETECTED                  !!"

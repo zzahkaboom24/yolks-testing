@@ -38,7 +38,9 @@ RUN			apt-get update -y \
 
 USER        container
 ENV         USER=container HOME=/home/container
-WORKDIR     /home/container
+
+RUN			mkdir -p /home/container/Server
+WORKDIR     /home/container/Server
 
 COPY 		./entrypoint.sh /entrypoint.sh
 

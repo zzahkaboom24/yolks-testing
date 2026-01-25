@@ -100,6 +100,7 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 		fi
 		if [[ -f "../start.sh" ]]; then
 			rm -f ../start.sh
+		fi
 		$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -download-path ../HytaleServer.zip
 	fi
 

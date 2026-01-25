@@ -254,4 +254,29 @@ fi
 
 cd /home/container/Server
 
+if [[ "${STARTUP:-}" == *Server/HytaleServer.jar* || "${0}" == *Server/HytaleServer.jar* ]]; then
+  echo ""
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!                        OUTDATED STARTUP DETECTED                  !!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo ""
+  echo "ERROR: Your startup command still contains '-jar Server/HytaleServer.jar'"
+  echo "       This is an outdated pattern from early versions of this Hytale egg."
+  echo ""
+  echo "Consequences for continued use:"
+  echo " - Server files (universe/, config.json, logs/, backups/, etc.) would be"
+  echo "   generated in the wrong directory: /home/container"
+  echo "   instead of the intended /home/container/Server directory."
+  echo "   Ever since Hytale version 2026.01.24-6e2d4fc36"
+  echo "   server files must be located in /home/container/Server"
+  echo ""
+  echo "Action required:"
+  echo " 1. Update to the latest Hytale egg version"
+  echo ""
+  echo "Server startup aborted to prevent further issues."
+  echo "Update the egg and restart."
+  echo ""
+  exit 1
+fi
+
 /java.sh $@

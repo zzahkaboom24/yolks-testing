@@ -32,6 +32,8 @@ USER		root
 COPY        --from=ghcr.io/pterodactyl/yolks:java_25 entrypoint.sh /java.sh
 RUN 		chmod +x /java.sh
 
+RUN 		sed -i 's|cd /home/container || exit 1|cd /home/container/Server || exit 1|' /java.sh
+
 RUN			apt-get update -y \
 				&& apt-get install -y unzip jq qemu-user-static \
 				&& rm -rf /var/lib/apt/lists/*

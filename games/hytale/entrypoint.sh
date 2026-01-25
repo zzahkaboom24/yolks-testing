@@ -9,10 +9,6 @@ if [[ -f "./HytaleMount/HytaleServer.zip" || -f "./HytaleMount/Assets.zip" ]]; t
 	HYTALE_MOUNT=true
 fi
 
-if [[ -f config.json ]]; then
-	jq --arg version "$HYTALE_PATCHLINE" '.Update.Patchline = $version' config.json > config.tmp.json && mv config.tmp.json config.json
-fi
-
 # Default to downloading (unless we find matching version)
 NEEDS_DOWNLOAD=true
 
@@ -221,6 +217,7 @@ if [[ -f config.json ]]; then
 	if [[ -n "$HYTALE_MAX_VIEW_RADIUS" ]]; then
 		jq --argjson maxviewradius "$HYTALE_MAX_VIEW_RADIUS" '.MaxViewRadius = $maxviewradius' config.json > config.tmp.json && mv config.tmp.json config.json
 	fi
+	jq --arg version "$HYTALE_PATCHLINE" '.Update.Patchline = $version' config.json > config.tmp.json && mv config.tmp.json config.json
 fi
 	
 /java.sh $@

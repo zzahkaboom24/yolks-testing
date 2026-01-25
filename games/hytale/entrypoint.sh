@@ -251,5 +251,7 @@ if [[ -f ./config.json ]]; then
 		jq --argjson maxviewradius "$HYTALE_MAX_VIEW_RADIUS" '.MaxViewRadius = $maxviewradius' ./config.json > ./config.tmp.json && mv ./config.tmp.json ./config.json
 	fi
 fi
-	
+
+cd /home/container
+
 /java.sh $@

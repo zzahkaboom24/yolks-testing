@@ -10,9 +10,9 @@ if [[ -f "./HytaleMount/HytaleServer.zip" || -f "./HytaleMount/Assets.zip" ]]; t
 fi
 
 # Respect the user's patchline wish, if they so choose to change it from the server console
-if [[ -f config.json ]]; then
-	if [[ ! -z "$(jq -r '.Update.Patchline // ""' config.json)" ]]; then
-		CONFIG_PATCHLINE=$(jq -r '.Update.Patchline // ""' config.json)
+if [[ -f ./Server/config.json ]]; then
+	if [[ ! -z "$(jq -r '.Update.Patchline // ""' ./Server/config.json)" ]]; then
+		CONFIG_PATCHLINE=$(jq -r '.Update.Patchline // ""' ./Server/config.json)
 		if [[ "$HYTALE_PATCHLINE" != "$CONFIG_PATCHLINE" ]]; then
 			HYTALE_PATCHLINE="$CONFIG_PATCHLINE"
 		fi
@@ -79,7 +79,24 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 	fi
 
 	if [[ "$NEEDS_DOWNLOAD" == true ]]; then
-		rm -rf ./Server/*
+		if [[ -d "./Server/Licenses" ]]; then
+			rm -rf ./Server/Licenses
+		fi
+		if [[ -f "./Server/HytaleServer.jar" ]]; then
+			rm -f ./Server/HytaleServer.jar
+		fi
+		if [[ -f "./Server/HytaleServer.aot" ]]; then
+			rm -f ./Server/HytaleServer.aot
+		fi
+		if [[ -f "./Assets.zip" ]]; then
+			rm -f ./Assets.zip
+		fi
+		if [[ -f "./start.bat" ]]; then
+			rm -f ./start.bat
+		fi
+		if [[ -f "./start.sh" ]]; then
+			rm -f ./start.sh
+		fi
 		$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -download-path HytaleServer.zip
 	fi
 
@@ -90,18 +107,18 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 fi
 
 if [[ "$HYTALE_MOUNT" == true ]]; then
-	if [[ -f "HytaleMount/HytaleServer.zip" ]]; then
-		unzip -o HytaleMount/HytaleServer.zip -d .
+	if [[ -f "./HytaleMount/HytaleServer.zip" ]]; then
+		unzip -o ./HytaleMount/HytaleServer.zip -d .
 	fi
-	if [[ -f "HytaleMount/Assets.zip" ]]; then
-		ln -s -f HytaleMount/Assets.zip Assets.zip
+	if [[ -f "./HytaleMount/Assets.zip" ]]; then
+		ln -s -f ./HytaleMount/Assets.zip ./Assets.zip
 	fi
 else
-	if [[ -f "Server/Assets.zip" ]]; then
-		ln -s -f Server/Assets.zip Assets.zip
+	if [[ -f "./Server/Assets.zip" ]]; then
+		ln -s -f ./Server/Assets.zip ./Assets.zip
 	fi
-	if [[ -f "HytaleServer.zip" ]]; then
-		unzip -o HytaleServer.zip -d .
+	if [[ -f "./HytaleServer.zip" ]]; then
+		unzip -o ./HytaleServer.zip -d .
 	fi
 fi
 
@@ -114,12 +131,12 @@ fi
 
 # Download the latest hytale-sourcequery plugin if enabled
 if [[ "${INSTALL_SOURCEQUERY_PLUGIN}" == "1" ]]; then
-	mkdir -p mods
+	mkdir -p ./Server/mods
 	echo -e "Downloading latest hytale-sourcequery plugin..."
 	LATEST_URL=$(curl -sSL https://api.github.com/repos/physgun-com/hytale-sourcequery/releases/latest \
 		| grep -oP '"browser_download_url":\s*"\K[^"]+\.jar' || true)
 	if [[ -n "$LATEST_URL" ]]; then
-		curl -sSL -o mods/hytale-sourcequery.jar "$LATEST_URL"
+		curl -sSL -o ./Server/mods/hytale-sourcequery.jar "$LATEST_URL"
 		echo -e "Successfully downloaded hytale-sourcequery plugin to mods folder."
 	else
 		echo -e "Warning: Could not find hytale-sourcequery plugin download URL."
@@ -128,12 +145,12 @@ fi
 
 # This section restores custom values in the config.json
 # Custom values are lost if an user runs /auth persistence Memory/Encrypted
-if [[ -f config.json && -f config.json.bak ]]; then
+if [[ -f ./Server/config.json && -f ./Server/config.json.bak ]]; then
 	# Restore AheadOfTimeCacheTrained
-	if [[ -z "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json)" ]]; then
-		if [[ ! -z "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json.bak)" ]]; then
-			AOT_BACKUP_FLAG=$(jq -r '.AheadOfTimeCacheTrained' config.json.bak)
-			jq --argjson trainaot "$AOT_BACKUP_FLAG" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
+	if [[ -z "$(jq -r '.AheadOfTimeCacheTrained // ""' ./Server/config.json)" ]]; then
+		if [[ ! -z "$(jq -r '.AheadOfTimeCacheTrained // ""' ./Server/config.json.bak)" ]]; then
+			AOT_BACKUP_FLAG=$(jq -r '.AheadOfTimeCacheTrained' ./Server/config.json.bak)
+			jq --argjson trainaot "$AOT_BACKUP_FLAG" '.AheadOfTimeCacheTrained = $trainaot' ./Server/config.json > ./Server/config.tmp.json && mv ./Server/config.tmp.json ./Server/config.json
 		fi
 	fi
 fi
@@ -207,27 +224,27 @@ if [[ "${USE_AOT_CACHE}" == "1" ]]; then
 	else
 		export JAVA_TOOL_OPTIONS="-XX:+UseCompressedOops -XX:+UseCompressedClassPointers"
 	fi
-	if [[ ! -f config.json || ! -f ./Server/HytaleServer.aot || "$NEEDS_DOWNLOAD" == true || "$NEEDS_AOT" == true ]]; then
+	if [[ ! -f ./Server/config.json || ! -f ./Server/HytaleServer.aot || "$NEEDS_DOWNLOAD" == true || "$NEEDS_AOT" == true ]]; then
 		train_aot
-	elif [[ -f config.json && "$NEEDS_DOWNLOAD" == false ]]; then
-		if [[ "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json)" != "true" ]]; then
+	elif [[ -f ./Server/config.json && "$NEEDS_DOWNLOAD" == false ]]; then
+		if [[ "$(jq -r '.AheadOfTimeCacheTrained // ""' ./Server/config.json)" != "true" ]]; then
 			train_aot
 		fi
 	fi
 else
 	AOT_TRAINED=false
-	jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
+	jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' ./Server/config.json > ./Server/config.tmp.json && mv ./Server/config.tmp.json ./Server/config.json
 fi
 
-if [[ -f ./Server/training.log && -f config.json ]]; then
+if [[ -f ./Server/training.log && -f ./Server/config.json ]]; then
 		AOT_TRAINED=true
-		jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
+		jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' ./Server/config.json > ./Server/config.tmp.json && mv ./Server/config.tmp.json ./Server/config.json
 		rm -f ./Server/training.log
 fi
 
-if [[ -f config.json ]]; then
+if [[ -f ./Server/config.json ]]; then
 	if [[ -n "$HYTALE_MAX_VIEW_RADIUS" ]]; then
-		jq --argjson maxviewradius "$HYTALE_MAX_VIEW_RADIUS" '.MaxViewRadius = $maxviewradius' config.json > config.tmp.json && mv config.tmp.json config.json
+		jq --argjson maxviewradius "$HYTALE_MAX_VIEW_RADIUS" '.MaxViewRadius = $maxviewradius' ./Server/config.json > ./Server/config.tmp.json && mv ./Server/config.tmp.json ./Server/config.json
 	fi
 fi
 	

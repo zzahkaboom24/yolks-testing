@@ -9,9 +9,7 @@ if [[ -f "./HytaleMount/HytaleServer.zip" || -f "./HytaleMount/Assets.zip" ]]; t
 	HYTALE_MOUNT=true
 fi
 
-if [[ -f config.json && ! -z "$(jq -r '.Update.Patchline // ""' config.json)" ]]; then
-	HYTALE_PATCHLINE=$(jq -r '.Update.Patchline // ""' config.json)
-elif [[ -f config.json && -z "$(jq -r '.Update.Patchline // ""' config.json)" ]]; then
+if [[ -f config.json ]]; then
 	jq --arg version "$HYTALE_PATCHLINE" '.Update.Patchline = $version' config.json > config.tmp.json && mv config.tmp.json config.json
 fi
 

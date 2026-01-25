@@ -34,8 +34,8 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 
 	cd /home/container/hytale-downloader
 	$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version
-	cd /home/container
 	LATEST_VERSION=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version)
+	cd /home/container
 
 	# Apply staged update if present
 	if [[ -f "./updater/staging/Server/HytaleServer.jar" ]]; then

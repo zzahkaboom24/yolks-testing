@@ -159,24 +159,26 @@ if [[ -f config.json && -f config.json.bak ]]; then
 	fi
 fi
 
+cd /home/container/Server
+
 MAX_HEAP=31744
 AOT_TRAINED=false
 # Re-train the Ahead-of-Time cache, because the one provided by Hytale can't load due to an "timestamp has changed" error
 train_aot() {
-	if [[ -f "./Server/HytaleServer.aot" ]]; then
-		rm -f ./Server/HytaleServer.aot
+	if [[ -f "./HytaleServer.aot" ]]; then
+		rm -f ./HytaleServer.aot
 	fi
-	if [[ -f "./Server/HytaleServer.aot.conf" ]]; then
-		rm -f ./Server/HytaleServer.aot.conf
+	if [[ -f "./HytaleServer.aot.conf" ]]; then
+		rm -f ./HytaleServer.aot.conf
 	fi
-	if [[ -f "./Server/training.log" ]]; then
-		rm -f ./Server/training.log
+	if [[ -f "./training.log" ]]; then
+		rm -f ./training.log
 	fi
 
-	touch ./Server/training.log
+	touch ./training.log
 
 	(
-		tail -f ./Server/training.log | while read -r LINE; do
+		tail -f ./training.log | while read -r LINE; do
 			echo "$LINE"
 			if [[ "$LINE" == *"Hytale Server Booted"* ]]; then
 				echo -e "Detected 'Hytale Server Booted'..."
@@ -184,7 +186,7 @@ train_aot() {
 			fi
 		done
 
-		PID=$(pgrep -f "./Server/HytaleServer.jar")
+		PID=$(pgrep -f "./HytaleServer.jar")
 		echo -e "Triggering shutdown to generate AOT cache..."
 		kill -TERM "$PID"
 		echo -e "Training finished. Waiting for creation of AOT cache file..."
@@ -201,14 +203,14 @@ train_aot() {
 		MAX_HEAP=$SERVER_MEMORY
 	fi
 	
-	java -XX:AOTCacheOutput=./Server/HytaleServer.aot -Xms128M -Xmx"${MAX_HEAP}"M -jar ./Server/HytaleServer.jar --auth-mode "${HYTALE_AUTH_MODE}" --assets ./Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1 | tee ./Server/training.log
+	java -XX:AOTCacheOutput=./HytaleServer.aot -Xms128M -Xmx"${MAX_HEAP}"M -jar ./HytaleServer.jar --auth-mode "${HYTALE_AUTH_MODE}" --assets ../Assets.zip --bind "0.0.0.0:${SERVER_PORT}" 2>&1 | tee ./training.log
 
 	TIMEOUT=30
-	while [[ ! -f "./Server/HytaleServer.aot" ]] && (( TIMEOUT > 0 )); do
+	while [[ ! -f "./HytaleServer.aot" ]] && (( TIMEOUT > 0 )); do
 		sleep 1
 		(( TIMEOUT-- ))
 	done
-	if [[ ! -f "./Server/HytaleServer.aot" ]]; then
+	if [[ ! -f "./HytaleServer.aot" ]]; then
 		echo -e "AOT file not found after 30s."
 	else
 		echo -e "AOT cache created: HytaleServer.aot. Restarting server..."
@@ -228,31 +230,29 @@ if [[ "${USE_AOT_CACHE}" == "1" ]]; then
 	else
 		export JAVA_TOOL_OPTIONS="-XX:+UseCompressedOops -XX:+UseCompressedClassPointers"
 	fi
-	if [[ ! -f config.json || ! -f ./Server/HytaleServer.aot || "$NEEDS_DOWNLOAD" == true || "$NEEDS_AOT" == true ]]; then
+	if [[ ! -f ./config.json || ! -f ./HytaleServer.aot || "$NEEDS_DOWNLOAD" == true || "$NEEDS_AOT" == true ]]; then
 		train_aot
-	elif [[ -f config.json && "$NEEDS_DOWNLOAD" == false ]]; then
-		if [[ "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json)" != "true" ]]; then
+	elif [[ -f ./config.json && "$NEEDS_DOWNLOAD" == false ]]; then
+		if [[ "$(jq -r '.AheadOfTimeCacheTrained // ""' ./config.json)" != "true" ]]; then
 			train_aot
 		fi
 	fi
 else
 	AOT_TRAINED=false
-	jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
+	jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' ./config.json > ./config.tmp.json && mv ./config.tmp.json ./config.json
 fi
 
-if [[ -f ./Server/training.log && -f config.json ]]; then
+if [[ -f ./training.log && -f ./config.json ]]; then
 		AOT_TRAINED=true
-		jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' config.json > config.tmp.json && mv config.tmp.json config.json
-		rm -f ./Server/training.log
+		jq --argjson trainaot "$AOT_TRAINED" '.AheadOfTimeCacheTrained = $trainaot' ./config.json > ./config.tmp.json && mv ./config.tmp.json ./config.json
+		rm -f ./training.log
 fi
 
-if [[ -f config.json ]]; then
+if [[ -f ./config.json ]]; then
 	if [[ -n "$HYTALE_MAX_VIEW_RADIUS" ]]; then
-		jq --argjson maxviewradius "$HYTALE_MAX_VIEW_RADIUS" '.MaxViewRadius = $maxviewradius' config.json > config.tmp.json && mv config.tmp.json config.json
+		jq --argjson maxviewradius "$HYTALE_MAX_VIEW_RADIUS" '.MaxViewRadius = $maxviewradius' ./config.json > ./config.tmp.json && mv ./config.tmp.json ./config.json
 	fi
 fi
-
-cd /home/container/Server
 
 if [[ "${STARTUP:-}" == *Server/HytaleServer.jar* || "${0}" == *Server/HytaleServer.jar* ]]; then
   echo ""

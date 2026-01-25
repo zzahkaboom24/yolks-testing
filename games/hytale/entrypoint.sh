@@ -279,4 +279,6 @@ if [[ "${STARTUP:-}" =~ -jar\ Server/HytaleServer\.jar || "${0}" =~ -jar\ Server
   exit 1
 fi
 
+export JAVA_OPTS="$JAVA_OPTS -Duser.dir=/home/container/Server"
+
 /java.sh $@

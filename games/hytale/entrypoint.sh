@@ -21,6 +21,7 @@ fi
 
 # Default to downloading (unless we find matching version)
 NEEDS_DOWNLOAD=true
+NEEDS_AOT=false
 
 # If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
 if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
@@ -57,6 +58,7 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 		
 		rm -rf ./updater/staging
 		NEEDS_DOWNLOAD=false
+		NEEDS_AOT=true
 	elif [[ ! -f "./updater/staging/Server/HytaleServer.jar" ]]; then
 		if [[ -f "./Server/HytaleServer.jar" ]]; then
 			CURRENT_VERSION=$(java -jar ./Server/HytaleServer.jar --version | awk '{print $2}' | sed 's/^v//')
@@ -205,7 +207,7 @@ if [[ "${USE_AOT_CACHE}" == "1" ]]; then
 	else
 		export JAVA_TOOL_OPTIONS="-XX:+UseCompressedOops -XX:+UseCompressedClassPointers"
 	fi
-	if [[ ! -f config.json || ! -f ./Server/HytaleServer.aot || "$NEEDS_DOWNLOAD" == true ]]; then
+	if [[ ! -f config.json || ! -f ./Server/HytaleServer.aot || "$NEEDS_DOWNLOAD" == true || "$NEEDS_AOT" == true ]]; then
 		train_aot
 	elif [[ -f config.json && "$NEEDS_DOWNLOAD" == false ]]; then
 		if [[ "$(jq -r '.AheadOfTimeCacheTrained // ""' config.json)" != "true" ]]; then

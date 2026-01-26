@@ -64,6 +64,7 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 
 		rm -rf ./updater/staging
 		echo "$curversion" > ./version
+	fi
 	if [[ -f ./version ]]; then
 		curversion=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version | tee /dev/tty)
 	fi

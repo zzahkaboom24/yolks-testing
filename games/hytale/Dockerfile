@@ -29,10 +29,38 @@ LABEL       org.opencontainers.image.licenses=MIT
 
 USER		root
 
-COPY        --from=ghcr.io/pterodactyl/yolks:java_25 entrypoint.sh /java.sh
-RUN 		chmod +x /java.sh
+RUN			mkdir -p /home/container/Server
 
-RUN 		echo "cd /home/container/Server || exit 1" | cat - /java.sh > /java_tmp.sh && mv /java_tmp.sh /java.sh
+RUN			cat > /java.sh << 'EOF'
+			#!/bin/bash
+
+			# Default the TZ environment variable to UTC.
+			TZ=${TZ:-UTC}
+			export TZ
+
+			# Set environment variable that holds the Internal Docker IP
+			INTERNAL_IP=$(ip route get 1 | awk '{print $(NF-2);exit}')
+			export INTERNAL_IP
+
+			# Switch to the container's working directory
+			cd /home/container/Server || exit 1
+
+			# Print Java version
+			printf "\033[1m\033[33mcontainer@pterodactyl~ \033[0mjava -version\n"
+			java -version
+
+			# Convert all of the "{{VARIABLE}}" parts of the command into the expected shell
+			# variable format of "${VARIABLE}" before evaluating the string and automatically
+			# replacing the values.
+			PARSED=$(echo "${STARTUP}" | sed -e 's/{{/${/g' -e 's/}}/}/g' | eval echo "$(cat -)")
+
+			# Display the command we're running in the output, and then execute it with the env
+			# from the container itself.
+			printf "\033[1m\033[33mcontainer@pterodactyl~ \033[0m%s\n" "$PARSED"
+			# shellcheck disable=SC2086
+			exec env ${PARSED}
+
+RUN 		chmod +x /java.sh
 
 RUN			apt-get update -y \
 				&& apt-get install -y unzip jq qemu-user-static \
@@ -40,8 +68,6 @@ RUN			apt-get update -y \
 
 USER        container
 ENV         USER=container HOME=/home/container
-
-RUN			mkdir -p /home/container/Server
 WORKDIR     /home/container/Server
 
 COPY 		./entrypoint.sh /entrypoint.sh

@@ -31,7 +31,7 @@ USER		root
 
 RUN			mkdir -p /home/container/Server
 
-RUN			cat > /java.sh << 'EOF'
+RUN			cat > /java.sh << EOF
 			#!/bin/bash
 
 			# Default the TZ environment variable to UTC.

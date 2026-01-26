@@ -3,6 +3,15 @@ set -e
 
 cd /home/container
 
+if [[ "$(uname -m)" == "aarch64" ]]; then
+	HYTALE_DOWNLOADER="qemu-x86_64-static ./hytale-downloader/hytale-downloader-linux"
+else
+	HYTALE_DOWNLOADER="./hytale-downloader/hytale-downloader-linux"
+fi
+
+"$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -print-version
+LATEST_VERSION=$("$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -print-version)
+
 if [[ -f ./config.json || -f ./HytaleServer.jar || -f ./HytaleServer.aot || -f ./whitelist.json || -f ./bans.json || -f ./whitelist.json ]]; then
 	if [[ ! -d "/home/container/Server" ]]; then
 		mkdir -p /home/container/Server
@@ -42,15 +51,6 @@ NEEDS_DOWNLOAD=true
 
 # If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
 if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
-	if [[ "$(uname -m)" == "aarch64" ]]; then
-		HYTALE_DOWNLOADER="qemu-x86_64-static ./hytale-downloader/hytale-downloader-linux"
-	else
-		HYTALE_DOWNLOADER="./hytale-downloader/hytale-downloader-linux"
-	fi
-
-	"$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -print-version
-	LATEST_VERSION=$("$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -print-version)
-
 	# Apply staged update if present
 	if [[ -f "./updater/staging/Server/HytaleServer.jar" ]]; then
 		echo "[Launcher] Applying $LATEST_VERSION update..."
@@ -276,7 +276,6 @@ if [[ -f ./config.json ]]; then
 	if [[ -n "$HYTALE_MAX_VIEW_RADIUS" ]]; then
 		jq --argjson maxviewradius "$HYTALE_MAX_VIEW_RADIUS" '.MaxViewRadius = $maxviewradius' ./config.json > ./config.tmp.json && mv ./config.tmp.json ./config.json
 	fi
-	LATEST_VERSION=$("$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -print-version)
 	jq --arg version "$LATEST_VERSION" '.ServerVersion = $version' ./config.json > ./config.tmp.json && mv ./config.tmp.json ./config.json
 fi
 

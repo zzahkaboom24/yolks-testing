@@ -39,6 +39,7 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 	else
 		HYTALE_DOWNLOADER="./hytale-downloader/hytale-downloader-linux"
 	fi
+
 	# Apply staged update if present
 	if [[ -f "./updater/staging/Server/HytaleServer.jar" ]]; then
 		curversion=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version | tee /dev/tty)
@@ -63,11 +64,13 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 		#fi
 
 		rm -rf ./updater/staging
-		APPLIED_UPDATE=true
 		echo "$curversion" > ./version
 	fi
+	
+	echo -e "Checking for Hytale server update..."
+
 	if [[ -f ./version ]]; then
-		curversion=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version | tee /dev/tty)
+		curversion=$("$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -print-version | tee /dev/tty)
 	fi
 
 	if ! [[ -e ./version ]] || [ "$curversion" != "$(cat "./version")" ]; then
@@ -75,11 +78,11 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 			echo -e "New update available, downloading version $curversion..."
 		fi
 
-		$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -download-path ./HytaleServer.zip
+		"$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -download-path HytaleServer.zip
 
 		# Write the current version if it wasn't set before
 		if [[ -z "$curversion" ]]; then
-			curversion=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version | tee /dev/tty)
+			curversion=$("$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -print-version | tee /dev/tty)
 		fi
 
 		unzip -o ./HytaleServer.zip -d .
@@ -97,7 +100,7 @@ elif [[ -f "HytaleServer.zip" ]]; then
 	unzip -o HytaleServer.zip -d .
 fi
 
-# Remove launch scripts, I don't believe them to be necessary.
+# Removing launch scripts, because I don't believe them to be necessary.
 # Updating server via /update download will cry about
 # "Expected Assets.zip and launcher scripts in parent directory."
 # But one can force it with /update download --force.

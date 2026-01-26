@@ -158,4 +158,8 @@ if [[ "${STARTUP:-}" =~ -jar\ Server/HytaleServer\.jar || "${0}" =~ -jar\ Server
   exit 1
 fi
 
+EXIT_CODE=$?
+if [ $EXIT_CODE -eq 8 ]; then
+	echo "[Launcher] Restarting to apply update..."
+fi
 /java.sh $@

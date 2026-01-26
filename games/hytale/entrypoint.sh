@@ -32,6 +32,10 @@ if [[ -f ./Server/config.json ]]; then
 	fi
 fi
 
+# Check for updater via console
+# Same variable to be found in start.sh
+APPLIED_UPDATE=false
+
 # If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
 if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 	if [[ "$(uname -m)" == "aarch64" ]]; then
@@ -63,6 +67,7 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 		#fi
 
 		rm -rf ./updater/staging
+		APPLIED_UPDATE=true
 		echo "$curversion" > ./version
 	fi
 	if [[ -f ./version ]]; then
@@ -159,7 +164,21 @@ if [[ "${STARTUP:-}" =~ -jar\ Server/HytaleServer\.jar || "${0}" =~ -jar\ Server
 fi
 
 EXIT_CODE=$?
-if [ $EXIT_CODE -eq 8 ]; then
+
+# Exit code 8 = restart for update
+if [[ $EXIT_CODE -eq 8 ]]; then
 	echo "[Launcher] Restarting to apply update..."
 fi
+
+# Warn on crash shortly after update
+if [[ $EXIT_CODE -ne 0 ]] && [[ "$APPLIED_UPDATE" = true ]]; then
+	echo ""
+	echo "[Launcher] ERROR: Server exited with code $EXIT_CODE shortly after starting."
+	echo "[Launcher] This may indicate the update failed to start correctly."
+	echo ""
+	echo "[Launcher] Your previous files are in the updater/backup/ folder."
+	echo "[Launcher] To rollback: Delete Server/ and Assets.zip, then move from updater/backup/"
+	echo ""
+fi
+
 /java.sh $@

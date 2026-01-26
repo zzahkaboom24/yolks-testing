@@ -159,7 +159,12 @@ if [[ -f config.json && -f config.json.bak ]]; then
 	fi
 fi
 
+if [[ ! -d "/home/container/Server" ]]; then
+	mkdir -p /home/container/Server
+fi
+
 cd /home/container/Server
+
 
 MAX_HEAP=31744
 AOT_TRAINED=false
@@ -278,7 +283,5 @@ if [[ "${STARTUP:-}" =~ -jar\ Server/HytaleServer\.jar || "${0}" =~ -jar\ Server
   echo ""
   exit 1
 fi
-
-export JAVA_OPTS="$JAVA_OPTS -Duser.dir=/home/container/Server"
 
 /java.sh $@

@@ -29,8 +29,6 @@ LABEL       org.opencontainers.image.licenses=MIT
 
 USER		root
 
-RUN			mkdir -p /home/container/Server
-
 RUN 		printf '%s\n' \
 			'#!/bin/bash' \
 			'# Default the TZ environment variable to UTC.' \

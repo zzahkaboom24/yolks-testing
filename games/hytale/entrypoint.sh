@@ -34,9 +34,14 @@ fi
 
 # If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
 if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
+	if [[ "$(uname -m)" == "aarch64" ]]; then
+		HYTALE_DOWNLOADER="qemu-x86_64-static ./hytale-downloader/hytale-downloader-linux"
+	else
+		HYTALE_DOWNLOADER="./hytale-downloader/hytale-downloader-linux"
+	fi
 	# Apply staged update if present
 	if [[ -f "./updater/staging/Server/HytaleServer.jar" ]]; then
-		curversion=$(./hytale-downloader/hytale-downloader-linux -patchline "$HYTALE_PATCHLINE" -print-version | tee /dev/tty)
+		curversion=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version | tee /dev/tty)
 		echo "[Launcher] Applying $curversion update..."
 		# Only replace update files, preserve config.json/universe/mods
 		cp -f ./updater/staging/Server/HytaleServer.jar ./Server/
@@ -60,7 +65,7 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 		rm -rf ./updater/staging
 		echo "$curversion" > ./version
 	if [[ -f ./version ]]; then
-		curversion=$(./hytale-downloader/hytale-downloader-linux -patchline "$HYTALE_PATCHLINE" -print-version | tee /dev/tty)
+		curversion=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version | tee /dev/tty)
 	fi
 
 	if ! [[ -e ./version ]] || [ "$curversion" != "$(cat "./version")" ]; then
@@ -68,11 +73,11 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 			echo -e "New update available, downloading version $curversion..."
 		fi
 
-		./hytale-downloader/hytale-downloader-linux -patchline "$HYTALE_PATCHLINE" -download-path ./HytaleServer.zip
+		$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -download-path ./HytaleServer.zip
 
 		# Write the current version if it wasn't set before
 		if [[ -z "$curversion" ]]; then
-			curversion=$(./hytale-downloader/hytale-downloader-linux -patchline "$HYTALE_PATCHLINE" -print-version | tee /dev/tty)
+			curversion=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version | tee /dev/tty)
 		fi
 
 		unzip -o ./HytaleServer.zip -d .

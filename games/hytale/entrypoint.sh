@@ -53,6 +53,8 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 	LATEST_VERSION=$("$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -print-version)
 else
 	echo "{\"access_token\":\"$HYTALE_SERVER_SESSION_TOKEN\",\"refresh_token\":\"\",\"expires_at\":2500000000,\"branch\":\"$HYTALE_PATCHLINE\"}" > /tmp/.hytale-downloader-credentials.json
+	"$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" --credentials-path /tmp/.hytale-downloader-credentials.json -print-version
+	LATEST_VERSION=$("$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" --credentials-path /tmp/.hytale-downloader-credentials.json -print-version)
 	echo "Downloading additional mods..."
 	mkdir -p ./Server/mods
 	curl -L -o ./Server/mods/nitrado-performance-saver-1.0.0.jar https://github.com/nitrado/hytale-plugin-performance-saver/releases/download/v1.0.0/nitrado-performance-saver-1.0.0.jar

@@ -67,9 +67,10 @@ USER        container
 ENV         USER=container HOME=/home/container
 WORKDIR     /home/container
 
-RUN 		--mount=type=secret,id=access_token << EOF
-			echo '{"access_token":"'$(cat /run/secrets/access_token)'","refresh_token":"","expires_at":2500000000,"branch":"release"
-
+RUN --mount=type=secret,id=access_token \
+    		echo '{"access_token":"'$(cat /run/secrets/access_token)'","refresh_token":"","expires_at":2500000000,"branch":"release"}' \
+    		> /tmp/.hytale-downloader-credentials.json
+	
 COPY 		./entrypoint.sh /entrypoint.sh
 
 CMD         [ "/bin/bash", "/entrypoint.sh" ]

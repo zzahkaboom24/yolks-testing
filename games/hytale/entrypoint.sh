@@ -172,6 +172,7 @@ if [[ "$AUTOMATIC_AUTHENTICATION" == "1" ]]; then
 	-H "Authorization: Bearer $HYTALE_TOKEN" \
 	-H "Content-Type: application/json" \
 	-d '{"uuid": "'$HYTALE_PROFILE'"}')
+fi
 
 # Removing launch scripts, because I don't believe them to be necessary.
 # Updating server via /update download will cry about

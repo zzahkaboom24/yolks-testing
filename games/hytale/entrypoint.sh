@@ -51,8 +51,9 @@ declare LATEST_VERSION
 if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 	"$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -print-version
 	LATEST_VERSION=$("$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -print-version)
-else
-	echo "{\"access_token\":\"$HYTALE_SERVER_SESSION_TOKEN\",\"refresh_token\":\"\",\"expires_at\":2500000000,\"branch\":\"$HYTALE_PATCHLINE\"}" > /tmp/.hytale-downloader-credentials.json
+fi
+if [[ ! -z "$HYTALE_TOKEN" ]]; then
+	echo "{\"access_token\":\"$HYTALE_TOKEN\",\"refresh_token\":\"\",\"expires_at\":2500000000,\"branch\":\"$HYTALE_PATCHLINE\"}" > /tmp/.hytale-downloader-credentials.json
 	"$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" --credentials-path /tmp/.hytale-downloader-credentials.json -print-version
 	LATEST_VERSION=$("$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" --credentials-path /tmp/.hytale-downloader-credentials.json -print-version)
 	echo "Downloading additional mods..."
@@ -168,7 +169,7 @@ fi
 
 if [[ "$AUTOMATIC_AUTHENTICATION" == "1" ]]; then
 	PING=$(curl -s -X POST "https://sessions.hytale.com/game-session/new" \
-	-H "Authorization: Bearer $HYTALE_SERVER_SESSION_TOKEN" \
+	-H "Authorization: Bearer $HYTALE_TOKEN" \
 	-H "Content-Type: application/json" \
 	-d '{"uuid": "'$HYTALE_PROFILE'"}')
 

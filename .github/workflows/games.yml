@@ -9,6 +9,10 @@ on:
     paths:
       - games/**
 
+permissions:
+  packages: write
+  contents: read   # usually already there
+
 jobs:
   pushMultiArch:
     name: "games:${{ matrix.game }}"

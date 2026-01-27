@@ -47,11 +47,6 @@ fi
 NEEDS_DOWNLOAD=true
 declare LATEST_VERSION
 
-# If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
-if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
-	"$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -print-version
-	LATEST_VERSION=$("$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -print-version)
-fi
 if [[ ! -z "$HYTALE_TOKEN" ]]; then
 	echo "{\"access_token\":\"$HYTALE_TOKEN\",\"refresh_token\":\"\",\"expires_at\":2500000000,\"branch\":\"$HYTALE_PATCHLINE\"}" > /tmp/.hytale-downloader-credentials.json
 	"$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" --credentials-path /tmp/.hytale-downloader-credentials.json -print-version

@@ -5,9 +5,14 @@ on:
     - cron: "0 0 1 * *"
   push:
     branches:
-      - master-sync
+      - master-testing
     paths:
       - games/**
+
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   pushMultiArch:
     name: "games:${{ matrix.game }}"
@@ -34,7 +39,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/zzahkaboom24/games-testing:${{ matrix.game }}
+            ghcr.io/zzahkaboom24/games:${{ matrix.game }}
   pushAmd:
     name: "games:${{ matrix.game }}"
     runs-on: ubuntu-latest
@@ -61,4 +66,4 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/zzahkaboom24/games-testing:${{ matrix.game }}
+            ghcr.io/zzahkaboom24/games${{ matrix.game }}

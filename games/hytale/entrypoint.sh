@@ -62,7 +62,7 @@ else
 	curl -L -o ./Server/mods/nitrado-query-1.0.1.jar https://github.com/nitrado/hytale-plugin-query/releases/download/v1.0.1/nitrado-query-1.0.1.jar
 fi
 
-PERMISSIONS=$(cat permissions.json 2>/dev/null)
+PERMISSIONS=$(cat ./Server/permissions.json 2>/dev/null)
 if [[ "$PERMISSIONS" == "" ]]; then
 	PERMISSIONS="{}"
 fi
@@ -74,7 +74,7 @@ echo "$PERMISSIONS" | jq 'setpath(
 		+ ["nitrado.query.web.read.players"]
 		| unique
 	)
-)' > permissions.json
+)' > ./Server/permissions.json
 	
 # Apply staged update if present
 if [[ -f "./updater/staging/Server/HytaleServer.jar" ]]; then
@@ -177,10 +177,10 @@ if [[ "$AUTOMATIC_AUTHENTICATION" == "1" ]]; then
 # "Expected Assets.zip and launcher scripts in parent directory."
 # But one can force it with /update download --force.
 # If auto-update is the goal, just delete or comment the bottom 2 if-blocks.
-if [[ -f start.bat ]]; then
+if [[ -f ./start.bat ]]; then
 	rm start.bat
 fi
-if [[ -f start.sh ]]; then
+if [[ -f ./start.sh ]]; then
 	rm start.sh
 fi
 

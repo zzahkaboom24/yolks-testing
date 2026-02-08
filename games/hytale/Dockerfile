@@ -63,7 +63,8 @@ RUN			apt-get update -y \
 				&& apt-get install -y unzip jq \
 				&& rm -rf /var/lib/apt/lists/*
 
-RUN         if [ "$(uname -m)" = "aarch64" ]; then \
+RUN         bash -c ' \
+			if [ "$(uname -m)" = "aarch64" ]; then \
 				apt update \
 				&& apt upgrade -y \
 				&& apt install -y libc++-dev libc6 git wget curl tar zip unzip binutils xz-utils liblzo2-2 cabextract iproute2 net-tools libatomic1 libsdl1.2debian libsdl2-2.0-0 \
@@ -77,6 +78,7 @@ RUN         if [ "$(uname -m)" = "aarch64" ]; then \
 				&& apt-get install -y box64-generic-arm \
 				&& rm -rf /var/lib/apt/lists/*
 			fi
+			'
 
 USER        container
 ENV         USER=container HOME=/home/container

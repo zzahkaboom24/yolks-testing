@@ -37,17 +37,15 @@ if [[ "${STARTUP:-}" =~ -jar\ Server/HytaleServer\.jar || "${0}" =~ -jar\ Server
 fi
 
 if [[ "$(uname -m)" == "aarch64" ]]; then
-	apt update -y 2>/dev/null
-	apt-get install -y qemu-user-static binfmt-support 2>/dev/null
+	echo "[Docker Image] Installing QEMU..."
+	apt update -y
+	apt-get install -y qemu-user-static binfmt-support
 	update-binfmts --enable qemu-x86_64 2>/dev/null
 	
 	HYTALE_DOWNLOADER="qemu-x86_64-static /home/container/hytale-downloader/hytale-downloader-linux"
 else
 	HYTALE_DOWNLOADER="/home/container/hytale-downloader/hytale-downloader-linux"
 fi
-
-echo "DEBUG: QEMU version:"
-qemu-x86_64-static --version
 
 if [[ -f ./config.json || -f ./HytaleServer.jar || -f ./HytaleServer.aot || -f ./whitelist.json || -f ./bans.json || -f ./whitelist.json ]]; then
 	if [[ ! -d "/home/container/Server" ]]; then

@@ -37,9 +37,7 @@ if [[ "${STARTUP:-}" =~ -jar\ Server/HytaleServer\.jar || "${0}" =~ -jar\ Server
 fi
 
 if [[ "$(uname -m)" == "aarch64" ]]; then
-	update-binfmts --enable qemu-x86_64 2>/dev/null
-	
-	HYTALE_DOWNLOADER="qemu-x86_64-static /home/container/hytale-downloader/hytale-downloader-linux"
+	HYTALE_DOWNLOADER="box64 /home/container/hytale-downloader/hytale-downloader-linux"
 else
 	HYTALE_DOWNLOADER="/home/container/hytale-downloader/hytale-downloader-linux"
 fi

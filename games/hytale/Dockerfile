@@ -68,9 +68,6 @@ RUN 		printf '%s\n' \
   			'cp /bin/busybox $WORK/bin/' \
   			'ln -s /bin/busybox $WORK/bin/sh' \
   			'' \
-  			'# Downloader (amd64)' \
-  			'cp /home/container/hytale-downloader/hytale-downloader-linux $WORK/hytale-downloader' \
-  			'' \
   			'# Init' \
   			"cat > \$WORK/init <<EOF" \
   			'#!/bin/sh' \
@@ -78,9 +75,6 @@ RUN 		printf '%s\n' \
   			'mount -t sysfs sysfs /sys' \
   			'' \
   			'/ip link set lo up' \
-  			'' \
-  			'echo "Running Hytale downloader..."' \
-  			'/hytale-downloader' \
   			'' \
   			'poweroff -f' \
   			'EOF' \

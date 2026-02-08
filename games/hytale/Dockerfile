@@ -90,7 +90,11 @@ RUN 		printf '%s\n' \
   			'cd $WORK' \
   			'find . | cpio -H newc -o | gzip > /vm/initramfs.img' \
   			> /build-initramfs.sh
-			
+
+RUN 		chmod +x /build-initramfs.sh
+
+RUN 		/build-initramfs.sh
+
 RUN 		chmod +x /java.sh
 
 RUN			apt-get update -y \

@@ -60,19 +60,14 @@ RUN 		printf '%s\n' \
 RUN 		chmod +x /java.sh
 
 RUN			apt-get update -y \
-				&& apt-get install -y unzip jq qemu-user-static binfmt-support\
+				&& apt-get install -y unzip jq qemu-user-static binfmt-support \
+				&& update-binfmts --enable qemu-x86_64 2>/dev/null \
 				&& rm -rf /var/lib/apt/lists/*
-
-RUN			update-binfmts --enable qemu-x86_64 || true && \
-			echo ':qemu-x86_64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-x86_64-static:CF' > /proc/sys/fs/binfmt_misc/register || true
 
 USER        container
 ENV         USER=container HOME=/home/container
 WORKDIR     /home/container
 
-RUN --mount=type=secret,id=access_token \
-    		echo '{"access_token":"'$(cat /run/secrets/access_token)'","refresh_token":"","expires_at":2500000000,"branch":"release"}' > /tmp/.hytale-downloader-credentials.json
-	
 COPY 		./entrypoint.sh /entrypoint.sh
 
 CMD         [ "/bin/bash", "/entrypoint.sh" ]

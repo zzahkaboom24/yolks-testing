@@ -60,8 +60,7 @@ RUN 		printf '%s\n' \
 RUN 		chmod +x /java.sh
 
 RUN			apt-get update -y \
-				&& apt-get install -y unzip jq qemu-user-static binfmt-support \
-				&& update-binfmts --enable qemu-x86_64 2>/dev/null \
+				&& apt-get install -y unzip jq \
 				&& rm -rf /var/lib/apt/lists/*
 
 USER        container

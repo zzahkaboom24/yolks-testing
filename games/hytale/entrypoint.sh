@@ -37,8 +37,8 @@ if [[ "${STARTUP:-}" =~ -jar\ Server/HytaleServer\.jar || "${0}" =~ -jar\ Server
 fi
 
 if [[ "$(uname -m)" == "aarch64" ]]; then
-	apt update -y
-	apt-get install -y qemu-user-static binfmt-support
+	apt update -y 2>/dev/null
+	apt-get install -y qemu-user-static binfmt-support 2>/dev/null
 	update-binfmts --enable qemu-x86_64 2>/dev/null
 	
 	HYTALE_DOWNLOADER="qemu-x86_64-static /home/container/hytale-downloader/hytale-downloader-linux"

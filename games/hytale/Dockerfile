@@ -60,8 +60,11 @@ RUN 		printf '%s\n' \
 RUN 		chmod +x /java.sh
 
 RUN			apt-get update -y \
-				&& apt-get install -y unzip jq qemu-user-static \
+				&& apt-get install -y unzip jq qemu-user-static binfmt-support\
 				&& rm -rf /var/lib/apt/lists/*
+
+RUN			update-binfmts --enable qemu-x86_64 || true && \
+			echo ':qemu-x86_64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-x86_64-static:CF' > /proc/sys/fs/binfmt_misc/register || true
 
 USER        container
 ENV         USER=container HOME=/home/container

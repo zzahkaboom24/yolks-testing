@@ -63,12 +63,27 @@ RUN			apt-get update -y \
 				&& apt-get install -y unzip jq wget gnupg2 lsb-release apt-transport-https curl \
 				&& rm -rf /var/lib/apt/lists/*
 
-RUN			wget -qO- "https://pi-apps-coders.github.io/box64-debs/KEY.gpg" | gpg --dearmor -o /usr/share/keyrings/box64-archive-keyring.gpg && \
-				echo "Types: deb
-			URIs: https://Pi-Apps-Coders.github.io/box64-debs/debian
-			Suites: ./
-			Signed-By: /usr/share/keyrings/box64-archive-keyring.gpg" > /etc/apt/sources.list.d/box64.sources && \
-				apt-get update && apt-get install -y box64-generic-arm
+# Box64/86 configuration
+ENV 		BOX64_DYNAREC_BIGBLOCK=0 \
+    		BOX64_DYNAREC_SAFEFLAGS=2 \
+    		BOX64_DYNAREC_STRONGMEM=3 \
+    		BOX64_DYNAREC_FASTROUND=0 \
+    		BOX64_DYNAREC_FASTNAN=0 \
+    		BOX64_DYNAREC_X87DOUBLE=1 \
+    		BOX64_DYNAREC_BLEEDING_EDGE=0 \
+    		BOX86_DYNAREC_BIGBLOCK=0 \
+    		BOX86_DYNAREC_SAFEFLAGS=2 \
+    		BOX86_DYNAREC_STRONGMEM=3 \
+    		BOX86_DYNAREC_FASTROUND=0 \
+    		BOX86_DYNAREC_FASTNAN=0 \
+    		BOX86_DYNAREC_X87DOUBLE=1 \
+    		BOX86_DYNAREC_BLEEDING_EDGE=0
+
+RUN			wget -qO- "https://pi-apps-coders.github.io/box64-debs/KEY.gpg" \
+			| gpg --dearmor -o /usr/share/keyrings/box64-archive-keyring.gpg && \
+			printf 'Types: deb\nURIs: https://Pi-Apps-Coders.github.io/box64-debs/debian\nSuites: ./\nSigned-By: /usr/share/keyrings/box64-archive-keyring.gpg\n' \
+			> /etc/apt/sources.list.d/box64.sources && \
+			apt-get update && apt-get install -y box64-generic-arm
 
 USER        container
 ENV         USER=container HOME=/home/container

@@ -57,43 +57,17 @@ RUN 		printf '%s\n' \
 			'# shellcheck disable=SC2086' \
 			'exec env ${PARSED}' > /java.sh
 
-RUN 		printf '%s\n' \
-  			'#!/bin/bash' \
-  			'set -e' \
-  			'' \
-  			'WORK=/vm' \
-  			'mkdir -p $WORK/{bin,sbin,proc,sys,dev}' \
-  			'' \
-  			'# BusyBox' \
-  			'cp /bin/busybox $WORK/bin/' \
-  			'ln -s /bin/busybox $WORK/bin/sh' \
-  			'' \
-  			'# Init' \
-  			"cat > \$WORK/init <<EOF" \
-  			'#!/bin/sh' \
-  			'mount -t proc proc /proc' \
-  			'mount -t sysfs sysfs /sys' \
-  			'' \
-  			'/ip link set lo up' \
-  			'' \
-  			'poweroff -f' \
-  			'EOF' \
-  			'' \
-  			'chmod +x $WORK/init' \
-  			'' \
-  			'cd $WORK' \
-  			'find . | cpio -H newc -o | gzip > /vm/initramfs.img' \
-  			> /build-initramfs.sh
-
-RUN 		chmod +x /build-initramfs.sh
-
-RUN 		/build-initramfs.sh
-
 RUN 		chmod +x /java.sh
 
 RUN			apt-get update -y \
-				&& apt-get install -y unzip jq qemu-system-x86 qemu-utils wget busybox-static \
+				&& apt-get install -y unzip jq wget gnupg2 lsb-release apt-transport-https curl \
 				&& rm -rf /var/lib/apt/lists/*
+RUN			wget -qO- "https://pi-apps-coders.github.io/box64-debs/KEY.gpg" | gpg --dearmor -o /usr/share/keyrings/box64-archive-keyring.gpg && \
+				echo "Types: deb
+			URIs: https://Pi-Apps-Coders.github.io/box64-debs/debian
+			Suites: ./
+			Signed-By: /usr/share/keyrings/box64-archive-keyring.gpg" > /etc/apt/sources.list.d/box64.sources && \
+				apt-get update && apt-get install -y box64-generic-arm
 
 USER        container
 ENV         USER=container HOME=/home/container

@@ -62,6 +62,7 @@ RUN 		chmod +x /java.sh
 RUN			apt-get update -y \
 				&& apt-get install -y unzip jq wget gnupg2 lsb-release apt-transport-https curl \
 				&& rm -rf /var/lib/apt/lists/*
+
 RUN			wget -qO- "https://pi-apps-coders.github.io/box64-debs/KEY.gpg" | gpg --dearmor -o /usr/share/keyrings/box64-archive-keyring.gpg && \
 				echo "Types: deb
 			URIs: https://Pi-Apps-Coders.github.io/box64-debs/debian

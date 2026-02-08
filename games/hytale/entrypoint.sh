@@ -42,6 +42,10 @@ else
 	HYTALE_DOWNLOADER="/home/container/hytale-downloader/hytale-downloader-linux"
 fi
 
+echo "DEBUG: HYTALE_DOWNLOADER=$HYTALE_DOWNLOADER"
+echo "DEBUG: Testing downloader..."
+$HYTALE_DOWNLOADER -version || echo "Downloader test failed"
+
 if [[ -f ./config.json || -f ./HytaleServer.jar || -f ./HytaleServer.aot || -f ./whitelist.json || -f ./bans.json || -f ./whitelist.json ]]; then
 	if [[ ! -d "/home/container/Server" ]]; then
 		mkdir -p /home/container/Server

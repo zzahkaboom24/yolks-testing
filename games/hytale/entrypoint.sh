@@ -3,10 +3,43 @@ set -e
 
 cd /home/container
 
+if [[ "${STARTUP:-}" =~ -jar\ Server/HytaleServer\.jar || "${0}" =~ -jar\ Server/HytaleServer\.jar ]]; then
+  echo ""
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!                        OUTDATED STARTUP DETECTED                  !!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo ""
+  echo "ERROR: Your startup command still uses 'Server/HytaleServer.jar'"
+  echo "       That's an outdated path from early versions of this Hytale egg."
+  echo ""
+  echo "What would happen on continued use:"
+  echo " - Server files (universe/, config.json, logs/, backups/, etc.) are"
+  echo "   generated in the wrong directory: /home/container"
+  echo "   instead of the intended /home/container/Server directory."
+  echo "   Ever since Hytale version 2026.01.24-6e2d4fc36"
+  echo "   server files must be located in /home/container/Server"
+  echo "   Additionally, the Server will not boot"
+  echo "   because we run exit 1 upon detecting Server/HytaleServer.jar used"
+  echo ""
+  echo "To do:"
+  echo " 1. Update to the latest Hytale egg version."
+  echo ""
+  echo "Up to date egg can be found from the following link:"
+  echo "https://github.com/zzahkaboom24/yolks/blob/master-sync/games/hytale/egg-hytale.json"
+  echo ""
+  echo "Or change the start up command of your egg/server to the following:"
+  echo "https://github.com/zzahkaboom24/yolks/blob/master-sync/games/hytale/startup-command.txt"
+  echo ""
+  echo "Server startup aborted to prevent usage on wrong path."
+  echo "Update the egg and restart."
+  echo ""
+  exit 1
+fi
+
 if [[ "$(uname -m)" == "aarch64" ]]; then
-	HYTALE_DOWNLOADER="qemu-x86_64-static ./hytale-downloader/hytale-downloader-linux"
+	HYTALE_DOWNLOADER="qemu-x86_64-static /home/container/hytale-downloader/hytale-downloader-linux"
 else
-	HYTALE_DOWNLOADER="./hytale-downloader/hytale-downloader-linux"
+	HYTALE_DOWNLOADER="/home/container/hytale-downloader/hytale-downloader-linux"
 fi
 
 if [[ -f ./config.json || -f ./HytaleServer.jar || -f ./HytaleServer.aot || -f ./whitelist.json || -f ./bans.json || -f ./whitelist.json ]]; then
@@ -45,105 +78,81 @@ fi
 
 # Default to downloading (unless we find matching version)
 NEEDS_DOWNLOAD=true
-declare LATEST_VERSION
+$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version
+LATEST_VERSION=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version)
 
-if [[ ! -z "$HYTALE_TOKEN" ]]; then
-	echo "{\"access_token\":\"$HYTALE_TOKEN\",\"refresh_token\":\"\",\"expires_at\":2500000000,\"branch\":\"$HYTALE_PATCHLINE\"}" > /tmp/.hytale-downloader-credentials.json
-	"$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" --credentials-path /tmp/.hytale-downloader-credentials.json -print-version
-	LATEST_VERSION=$("$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" --credentials-path /tmp/.hytale-downloader-credentials.json -print-version)
-	echo "Downloading additional mods..."
-	mkdir -p ./Server/mods
-	curl -L -o ./Server/mods/nitrado-performance-saver-1.0.0.jar https://github.com/nitrado/hytale-plugin-performance-saver/releases/download/v1.0.0/nitrado-performance-saver-1.0.0.jar
-	curl -L -o ./Server/mods/nitrado-webserver-1.0.0.jar https://github.com/nitrado/hytale-plugin-webserver/releases/download/v1.0.0/nitrado-webserver-1.0.0.jar
-	curl -L -o ./Server/mods/nitrado-query-1.0.1.jar https://github.com/nitrado/hytale-plugin-query/releases/download/v1.0.1/nitrado-query-1.0.1.jar
-fi
+# If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
+if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
+	# Apply staged update if present
+	if [[ -f "./updater/staging/Server/HytaleServer.jar" ]]; then
+		echo "[Launcher] Applying $LATEST_VERSION update..."
+		# Only replace update files, preserve config.json/universe/mods
+		cp -f ./updater/staging/Server/HytaleServer.jar ./Server/
+		if [[ -f "./updater/staging/Server/HytaleServer.aot" ]]; then
+			cp -f ./updater/staging/Server/HytaleServer.aot ./Server/
+		fi
+		if [[ -d "./updater/staging/Server/Licenses" ]]; then
+			rm -rf ./Server/Licenses
+			cp -r ./updater/staging/Server/Licenses ./Server
+		fi
+		if [[ -f "./updater/staging/Assets.zip" ]]; then
+			cp -f ./updater/staging/Assets.zip ./
+		fi
+		#if [[ -f ".updater/staging/start.sh" ]]; then
+		#	cp -f ./updater/staging/start.sh ./
+		#fi
+		#if [[ -f ".updater/staging/start.bat" ]]; then
+		#	cp -f ./updater/staging/start.bat ./
+		#fi
 
-PERMISSIONS=$(cat ./Server/permissions.json 2>/dev/null)
-if [[ "$PERMISSIONS" == "" ]]; then
-	PERMISSIONS="{}"
-fi
-
-echo "$PERMISSIONS" | jq 'setpath(
-	["users","00000000-0000-0000-0000-000000000000","permissions"];
-	(
-		(.users["00000000-0000-0000-0000-000000000000"].permissions // [])
-		+ ["nitrado.query.web.read.players"]
-		| unique
-	)
-)' > ./Server/permissions.json
-	
-# Apply staged update if present
-if [[ -f "./updater/staging/Server/HytaleServer.jar" ]]; then
-	echo "[Launcher] Applying $LATEST_VERSION update..."
-	# Only replace update files, preserve config.json/universe/mods
-	cp -f ./updater/staging/Server/HytaleServer.jar ./Server/
-	if [[ -f "./updater/staging/Server/HytaleServer.aot" ]]; then
-		cp -f ./updater/staging/Server/HytaleServer.aot ./Server/
-	fi
-	if [[ -d "./updater/staging/Server/Licenses" ]]; then
-		rm -rf ./Server/Licenses
-		cp -r ./updater/staging/Server/Licenses ./Server
-	fi
-	if [[ -f "./updater/staging/Assets.zip" ]]; then
-		cp -f ./updater/staging/Assets.zip ./
-	fi
-	#if [[ -f ".updater/staging/start.sh" ]]; then
-	#	cp -f ./updater/staging/start.sh ./
-	#fi
-	#if [[ -f ".updater/staging/start.bat" ]]; then
-	#	cp -f ./updater/staging/start.bat ./
-	#fi
-
-	rm -rf ./updater/staging
-	rm -f /tmp/.hytale-downloader-credentials.json
-	if [[ -f ./Server/config.json ]]; then
-		jq --arg version "$LATEST_VERSION" '.ServerVersion = $version' ./Server/config.json > ./Server/config.tmp.json && mv ./Server/config.tmp.json ./Server/config.json
-	fi
-elif [[ -f "./Server/HytaleServer.jar" ]]; then
-	if [[ -f ./Server/config.json ]]; then
-		if [[ "$(jq -r '.ServerVersion // ""' ./Server/config.json)" != "" ]]; then
-			CURRENT_VERSION=$(jq -r '.ServerVersion' ./Server/config.json)
+		rm -rf ./updater/staging
+		if [[ -f ./Server/config.json ]]; then
+			jq --arg version "$LATEST_VERSION" '.ServerVersion = $version' ./Server/config.json > ./Server/config.tmp.json && mv ./Server/config.tmp.json ./Server/config.json
+		fi
+	elif [[ -f "./Server/HytaleServer.jar" ]]; then
+		if [[ -f ./Server/config.json ]]; then
+			if [[ "$(jq -r '.ServerVersion // ""' ./Server/config.json)" != "" ]]; then
+				CURRENT_VERSION=$(jq -r '.ServerVersion' ./Server/config.json)
+			else
+				CURRENT_VERSION=$(java -jar ./Server/HytaleServer.jar --version | awk '{print $2}' | sed 's/^v//')
+			fi
 		else
 			CURRENT_VERSION=$(java -jar ./Server/HytaleServer.jar --version | awk '{print $2}' | sed 's/^v//')
 		fi
+		if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" ]]; then
+			echo -e "Server is out-of-date!"
+			echo -e "Currently installed: $CURRENT_VERSION"
+			echo -e "Latest available: $LATEST_VERSION"
+			NEEDS_DOWNLOAD=true
+		else
+			echo -e "Server is up-to-date!"
+			echo -e "Currently installed: $CURRENT_VERSION"
+			echo -e "Latest available: $LATEST_VERSION"
+        	NEEDS_DOWNLOAD=false
+		fi
 	else
-		CURRENT_VERSION=$(java -jar ./Server/HytaleServer.jar --version | awk '{print $2}' | sed 's/^v//')
+		echo -e "Server has not yet been installed!"
+		echo -e "Attempting install!"
 	fi
-	if [[ "$CURRENT_VERSION" != "$LATEST_VERSION" ]]; then
-		echo -e "Server is out-of-date!"
-		echo -e "Currently installed: $CURRENT_VERSION"
-		echo -e "Latest available: $LATEST_VERSION"
+
+	if [[ ! -f "./Assets.zip" ]]; then
 		NEEDS_DOWNLOAD=true
-	else
-		echo -e "Server is up-to-date!"
-		echo -e "Currently installed: $CURRENT_VERSION"
-		echo -e "Latest available: $LATEST_VERSION"
-        NEEDS_DOWNLOAD=false
-		rm -f /tmp/.hytale-downloader-credentials.json
 	fi
-else
-	echo -e "Server has not yet been installed!"
-	echo -e "Attempting install!"
-fi
 
-if [[ ! -f "./Assets.zip" ]]; then
-	NEEDS_DOWNLOAD=true
-fi
-
-if [[ "$NEEDS_DOWNLOAD" == true ]]; then
-	if [[ -f "./Server/HytaleServer.jar" ]]; then
-		rm -rf ./Assets.zip
-		rm -rf ./Server/HytaleServer.jar
-		rm -rf ./Server/HytaleServer.aot
-		rm -rf ./Server/Licenses
+	if [[ "$NEEDS_DOWNLOAD" == true ]]; then
+		if [[ -f "./Server/HytaleServer.jar" ]]; then
+			rm -rf ./Assets.zip
+			rm -rf ./Server/HytaleServer.jar
+			rm -rf ./Server/HytaleServer.aot
+			rm -rf ./Server/Licenses
+		fi
+		$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -download-path ./HytaleServer.zip
 	fi
-	"$HYTALE_DOWNLOADER" -patchline "$HYTALE_PATCHLINE" -download-path ./HytaleServer.zip
-	rm -f /tmp/.hytale-downloader-credentials.json
-fi
 
-if [[ -f "./HytaleServer.zip" ]]; then
-	unzip -o ./HytaleServer.zip -d .
-	rm -f ./HytaleServer.zip
+	if [[ -f "./HytaleServer.zip" ]]; then
+		unzip -o ./HytaleServer.zip -d .
+		rm -f ./HytaleServer.zip
+	fi
 fi
 
 if [[ "$HYTALE_MOUNT" == true ]]; then
@@ -162,22 +171,15 @@ else
 	fi
 fi
 
-if [[ "$AUTOMATIC_AUTHENTICATION" == "1" ]]; then
-	PING=$(curl -s -X POST "https://sessions.hytale.com/game-session/new" \
-	-H "Authorization: Bearer $HYTALE_TOKEN" \
-	-H "Content-Type: application/json" \
-	-d '{"uuid": "'$HYTALE_PROFILE'"}')
-fi
-
 # Removing launch scripts, because I don't believe them to be necessary.
 # Updating server via /update download will cry about
 # "Expected Assets.zip and launcher scripts in parent directory."
 # But one can force it with /update download --force.
 # If auto-update is the goal, just delete or comment the bottom 2 if-blocks.
-if [[ -f ./start.bat ]]; then
+if [[ -f start.bat ]]; then
 	rm start.bat
 fi
-if [[ -f ./start.sh ]]; then
+if [[ -f start.sh ]]; then
 	rm start.sh
 fi
 
@@ -311,39 +313,6 @@ if [[ -f ./config.json ]]; then
 		jq --argjson maxviewradius "$HYTALE_MAX_VIEW_RADIUS" '.MaxViewRadius = $maxviewradius' ./config.json > ./config.tmp.json && mv ./config.tmp.json ./config.json
 	fi
 	jq --arg version "$LATEST_VERSION" '.ServerVersion = $version' ./config.json > ./config.tmp.json && mv ./config.tmp.json ./config.json
-fi
-
-if [[ "${STARTUP:-}" =~ -jar\ Server/HytaleServer\.jar || "${0}" =~ -jar\ Server/HytaleServer\.jar ]]; then
-  echo ""
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!                        OUTDATED STARTUP DETECTED                  !!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo ""
-  echo "ERROR: Your startup command still uses 'Server/HytaleServer.jar'"
-  echo "       That's an outdated path from early versions of this Hytale egg."
-  echo ""
-  echo "What would happen on continued use:"
-  echo " - Server files (universe/, config.json, logs/, backups/, etc.) are"
-  echo "   generated in the wrong directory: /home/container"
-  echo "   instead of the intended /home/container/Server directory."
-  echo "   Ever since Hytale version 2026.01.24-6e2d4fc36"
-  echo "   server files must be located in /home/container/Server"
-  echo "   Additionally, the Server will not boot"
-  echo "   because we run exit 1 upon detecting Server/HytaleServer.jar used"
-  echo ""
-  echo "To do:"
-  echo " 1. Update to the latest Hytale egg version."
-  echo ""
-  echo "Up to date egg can be found from the following link:"
-  echo "https://github.com/zzahkaboom24/yolks/blob/master-sync/games/hytale/egg-hytale.json"
-  echo ""
-  echo "Or change the start up command of your egg/server to the following:"
-  echo "https://github.com/zzahkaboom24/yolks/blob/master-sync/games/hytale/startup-command.txt"
-  echo ""
-  echo "Server startup aborted to prevent usage on wrong path."
-  echo "Update the egg and restart."
-  echo ""
-  exit 1
 fi
 
 /java.sh $@

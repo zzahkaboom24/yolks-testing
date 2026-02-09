@@ -65,7 +65,10 @@ RUN 		if [ "$(uname -m)" = "aarch64" ]; then \
 				&& apt-get install -y software-properties-common \
 				&& add-apt-repository -y ppa:fex-emu/fex \
 				&& apt-get update -y \
-    			&& apt-get install -y unzip jq fex-emu \
+    			&& apt-get install -y unzip jq \
+				&& (apt-get install -y fex-emu-armv8.4 || \
+					apt-get install -y fex-emu-armv8.2 || \
+					apt-get install -y fex-emu-armv8.0) \
     			&& FEXRootFSFetcher -y -x \
     			&& rm -rf /var/lib/apt/lists/*; \
 			else \

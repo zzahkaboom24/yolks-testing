@@ -69,7 +69,7 @@ RUN 		if [ "$(uname -m)" = "aarch64" ]; then \
 				mkdir /tmp/FEX/build && cd /tmp/FEX/build && \
     			cmake .. -DCMAKE_BUILD_TYPE=Release && \
     			make -j$(nproc) install && \
-    			cd / && rm -rf /tmp/FEX \
+    			cd / && rm -rf /tmp/FEX; \
 			fi
 	
 USER        container

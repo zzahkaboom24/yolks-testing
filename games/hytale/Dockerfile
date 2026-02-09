@@ -65,11 +65,11 @@ RUN			apt-get update -y \
 
 # Install FEX
 RUN 		if [ "$(uname -m)" = "aarch64" ]; then \
-				git clone --branch main https://github.com/FEX-Emu/FEX.git /tmp/FEX \
-				&& mkdir /tmp/FEX/build && cd /tmp/FEX/build \
-    			&& cmake .. -DCMAKE_BUILD_TYPE=Release \
-    			&& make -j$(nproc) install \
-    			&& cd / && rm -rf /tmp/FEX
+				git clone --branch main https://github.com/FEX-Emu/FEX.git /tmp/FEX && \
+				mkdir /tmp/FEX/build && cd /tmp/FEX/build && \
+    			cmake .. -DCMAKE_BUILD_TYPE=Release && \
+    			make -j$(nproc) install && \
+    			cd / && rm -rf /tmp/FEX \
 			fi
 	
 USER        container

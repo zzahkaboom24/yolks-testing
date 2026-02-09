@@ -59,24 +59,17 @@ RUN 		printf '%s\n' \
 
 RUN 		chmod +x /java.sh
 
-# Install FEX
-RUN 		if [ "$(uname -m)" = "aarch64" ]; then \
-				apt-get update -y \
-				&& apt-get install -y software-properties-common \
-				&& add-apt-repository -y ppa:fex-emu/fex \
-				&& apt-get update -y \
-    			&& apt-get install -y unzip jq \
-				&& (apt-get install -y fex-emu-armv8.4 || \
-					apt-get install -y fex-emu-armv8.2 || \
-					apt-get install -y fex-emu-armv8.0) \
-    			&& FEXRootFSFetcher -y -x \
-    			&& rm -rf /var/lib/apt/lists/*; \
-			else \
-				apt-get update -y \
-				&& apt-get install -y unzip jq \
-				&& rm -rf /var/lib/apt/lists/*; \
-			fi
-	
+RUN         if [ "$(uname -m)" = "aarch64" ]; then \
+                apt-get update -y \
+                && apt-get install -y unzip jq qemu-user-static binfmt-support \
+                && update-binfmts --enable qemu-x86_64 2>/dev/null \
+                && rm -rf /var/lib/apt/lists/*; \
+            else \
+                apt-get update -y \
+                && apt-get install -y unzip jq \
+                && rm -rf /var/lib/apt/lists/*; \
+            fi
+
 USER        container
 ENV         USER=container HOME=/home/container
 WORKDIR     /home/container

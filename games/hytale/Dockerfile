@@ -79,7 +79,7 @@ RUN 		printf '%s\n' \
 RUN 		chmod +x /java.sh
 
 RUN			apt-get update -y \
-				&& apt-get install -y unzip jq qemu-user-static \
+				&& apt-get install -y unzip jq \
 				&& rm -rf /var/lib/apt/lists/*
 
 USER        container

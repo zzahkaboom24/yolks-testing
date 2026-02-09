@@ -48,6 +48,22 @@ RUN 		if [ "$(uname -m)" = "aarch64" ]; then \
     			rm -rf /var/lib/apt/lists/*; \
 			fi
 
+# Box64/86 configuration
+ENV 		BOX64_DYNAREC_BIGBLOCK=0 \
+    		BOX64_DYNAREC_SAFEFLAGS=2 \
+    		BOX64_DYNAREC_STRONGMEM=3 \
+    		BOX64_DYNAREC_FASTROUND=0 \
+    		BOX64_DYNAREC_FASTNAN=0 \
+    		BOX64_DYNAREC_X87DOUBLE=1 \
+    		BOX64_DYNAREC_BLEEDING_EDGE=0 \
+    		BOX86_DYNAREC_BIGBLOCK=0 \
+    		BOX86_DYNAREC_SAFEFLAGS=2 \
+    		BOX86_DYNAREC_STRONGMEM=3 \
+    		BOX86_DYNAREC_FASTROUND=0 \
+    		BOX86_DYNAREC_FASTNAN=0 \
+    		BOX86_DYNAREC_X87DOUBLE=1 \
+    		BOX86_DYNAREC_BLEEDING_EDGE=0
+
 RUN 		printf '%s\n' \
 			'#!/bin/bash' \
 			'# Default the TZ environment variable to UTC.' \

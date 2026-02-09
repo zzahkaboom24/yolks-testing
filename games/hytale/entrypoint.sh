@@ -37,7 +37,7 @@ if [[ "${STARTUP:-}" =~ -jar\ Server/HytaleServer\.jar || "${0}" =~ -jar\ Server
 fi
 
 if [[ "$(uname -m)" == "aarch64" ]]; then
-	HYTALE_DOWNLOADER="FEX /home/container/hytale-downloader/hytale-downloader-linux"
+	HYTALE_DOWNLOADER="qemu-x86_64-static -cpu max /home/container/hytale-downloader/hytale-downloader-linux"
 else
 	HYTALE_DOWNLOADER="/home/container/hytale-downloader/hytale-downloader-linux"
 fi

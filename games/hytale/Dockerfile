@@ -59,17 +59,19 @@ RUN 		printf '%s\n' \
 
 RUN 		chmod +x /java.sh
 
-RUN			apt-get update -y \
-				&& apt-get install -y wget cmake build-essential git python3 python3-pip unzip jq ninja-build pkg-config \
-				&& rm -rf /var/lib/apt/lists/*
-
 # Install FEX
 RUN 		if [ "$(uname -m)" = "aarch64" ]; then \
-				git clone --branch main https://github.com/FEX-Emu/FEX.git /tmp/FEX && \
-				mkdir /tmp/FEX/build && cd /tmp/FEX/build && \
-    			cmake .. -DCMAKE_BUILD_TYPE=Release && \
-    			make -j$(nproc) install && \
-    			cd / && rm -rf /tmp/FEX; \
+				apt-get update -y \
+				&& apt-get install -y software-properties-common \
+				&& add-apt-repository -y ppa:fex-emu/fex \
+				&& apt-get update -y \
+    			&& apt-get install -y unzip jq fex-emu \
+    			&& FEXRootFSFetcher -y -x \
+    			&& rm -rf /var/lib/apt/lists/*; \
+			else
+				apt-get update -y \
+				&& apt-get install -y unzip jq \
+				&& rm -rf /var/lib/apt/lists/*; \
 			fi
 	
 USER        container

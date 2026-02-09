@@ -27,7 +27,7 @@ LABEL       author="William V." maintainer="william.venner@infraly.co"
 LABEL       org.opencontainers.image.source="https://github.com/pterodactyl/yolks"
 LABEL       org.opencontainers.image.licenses=MIT
 
-USER		root-
+USER		root
 
 RUN 		printf '%s\n' \
 			'#!/bin/bash' \
@@ -60,7 +60,7 @@ RUN 		printf '%s\n' \
 RUN 		chmod +x /java.sh
 
 RUN			apt-get update -y \
-				&& apt-get install -y wget cmake build-essential git python3 python3-pip unzip jq \
+				&& apt-get install -y wget cmake build-essential git python3 python3-pip unzip jq ninja-build pkg-config \
 				&& rm -rf /var/lib/apt/lists/*
 
 # Install FEX

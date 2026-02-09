@@ -40,11 +40,13 @@ RUN 		apt-get update -y && apt-get upgrade -y \
     		&& dpkg-reconfigure --frontend noninteractive locales \
     		&& rm -rf /var/lib/apt/lists/*
 
-RUN 		wget https://ryanfortner.github.io/box64-debs/box64.list -O /etc/apt/sources.list.d/box64.list \
-    		&& wget -qO- https://ryanfortner.github.io/box64-debs/KEY.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/box64-debs-archive-keyring.gpg \
-    		&& apt-get update -y \
-    		&& apt-get install -y box64-rpi4arm64 \
-    		&& rm -rf /var/lib/apt/lists/*
+RUN 		if [ "$(uname -m)" = "aarch64" ]; then \
+				wget https://ryanfortner.github.io/box64-debs/box64.list -O /etc/apt/sources.list.d/box64.list && \
+    			wget -qO- https://ryanfortner.github.io/box64-debs/KEY.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/box64-debs-archive-keyring.gpg && \
+    			apt-get update && \
+    			apt-get install -y box64-rpi4arm64 && \
+    			rm -rf /var/lib/apt/lists/*; \
+			fi
 
 RUN 		printf '%s\n' \
 			'#!/bin/bash' \

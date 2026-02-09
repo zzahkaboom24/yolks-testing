@@ -27,42 +27,7 @@ LABEL       author="William V." maintainer="william.venner@infraly.co"
 LABEL       org.opencontainers.image.source="https://github.com/pterodactyl/yolks"
 LABEL       org.opencontainers.image.licenses=MIT
 
-USER		root
-
-RUN 		apt-get update -y && apt-get upgrade -y \
-    		&& apt-get install -y \
-        		libc++-dev libc6 git wget curl tar zip unzip binutils xz-utils liblzo2-2 cabextract iproute2 net-tools libatomic1 \
-        		libsdl1.2debian libsdl2-2.0-0 libfontconfig icu-devtools libunwind8 libssl-dev sqlite3 libsqlite3-dev libmariadb-dev libmariadb-dev-compat \
-        		libduktape207 locales ffmpeg gnupg2 apt-transport-https software-properties-common ca-certificates \
-        		libz3-dev rapidjson-dev tzdata libevent-dev libzip4 libsdl2-mixer-2.0-0 libsdl2-image-2.0-0 build-essential cmake \
-        		libgdiplus \
-    		&& update-locale LANG=en_US.UTF-8 \
-    		&& dpkg-reconfigure --frontend noninteractive locales \
-    		&& rm -rf /var/lib/apt/lists/*
-
-RUN 		if [ "$(uname -m)" = "aarch64" ]; then \
-				wget https://ryanfortner.github.io/box64-debs/box64.list -O /etc/apt/sources.list.d/box64.list && \
-    			wget -qO- https://ryanfortner.github.io/box64-debs/KEY.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/box64-debs-archive-keyring.gpg && \
-    			apt-get update && \
-    			apt-get install -y box64-rpi4arm64 && \
-    			rm -rf /var/lib/apt/lists/*; \
-			fi
-
-# Box64/86 configuration
-ENV 		BOX64_DYNAREC_BIGBLOCK=0 \
-    		BOX64_DYNAREC_SAFEFLAGS=2 \
-    		BOX64_DYNAREC_STRONGMEM=3 \
-    		BOX64_DYNAREC_FASTROUND=0 \
-    		BOX64_DYNAREC_FASTNAN=0 \
-    		BOX64_DYNAREC_X87DOUBLE=1 \
-    		BOX64_DYNAREC_BLEEDING_EDGE=0 \
-    		BOX86_DYNAREC_BIGBLOCK=0 \
-    		BOX86_DYNAREC_SAFEFLAGS=2 \
-    		BOX86_DYNAREC_STRONGMEM=3 \
-    		BOX86_DYNAREC_FASTROUND=0 \
-    		BOX86_DYNAREC_FASTNAN=0 \
-    		BOX86_DYNAREC_X87DOUBLE=1 \
-    		BOX86_DYNAREC_BLEEDING_EDGE=0
+USER		root-
 
 RUN 		printf '%s\n' \
 			'#!/bin/bash' \
@@ -95,9 +60,18 @@ RUN 		printf '%s\n' \
 RUN 		chmod +x /java.sh
 
 RUN			apt-get update -y \
-				&& apt-get install -y unzip jq \
+				&& apt-get install -y wget cmake build-essential git python3 python3-pip unzip jq \
 				&& rm -rf /var/lib/apt/lists/*
 
+# Install FEX
+RUN 		if [ "$(uname -m)" = "aarch64" ]; then \
+				git clone --branch main https://github.com/FEX-Emu/FEX.git /tmp/FEX \
+				&& mkdir /tmp/FEX/build && cd /tmp/FEX/build \
+    			&& cmake .. -DCMAKE_BUILD_TYPE=Release \
+    			&& make -j$(nproc) install \
+    			&& cd / && rm -rf /tmp/FEX
+			fi
+	
 USER        container
 ENV         USER=container HOME=/home/container
 WORKDIR     /home/container

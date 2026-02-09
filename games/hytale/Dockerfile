@@ -68,7 +68,7 @@ RUN 		if [ "$(uname -m)" = "aarch64" ]; then \
     			&& apt-get install -y unzip jq fex-emu \
     			&& FEXRootFSFetcher -y -x \
     			&& rm -rf /var/lib/apt/lists/*; \
-			else
+			else \
 				apt-get update -y \
 				&& apt-get install -y unzip jq \
 				&& rm -rf /var/lib/apt/lists/*; \

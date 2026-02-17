@@ -15,7 +15,7 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 	echo -e "Checking for Hytale server update..."
 
 	if [[ -f version ]]; then
-		curversion=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version)
+		curversion=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version 2>&1)
 	fi
 
 	if ! [[ -e version ]] || [ "$curversion" != "$(cat "version")" ]; then
@@ -28,7 +28,7 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 
 		# Write the current version if it wasn't set before
 		if [[ -z "$curversion" ]]; then
-			curversion=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version)
+			curversion=$($HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -print-version 2>&1)
 		fi
 
 		unzip -o HytaleServer.zip -d .

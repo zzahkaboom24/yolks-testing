@@ -3,8 +3,6 @@ set -e
 
 cd /home/container
 
-HYTALE_DOWNLOADER=""
-
 if [[ "$(uname -m)" == "aarch64" ]]; then
 	HYTALE_DOWNLOADER="qemu-x86_64-static /home/container/hytale-downloader/hytale-downloader-linux"
 else
@@ -21,13 +19,11 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 	fi
 
 	if ! [[ -e version ]] || [ "$curversion" != "$(cat "version")" ]; then
-		if [[ -f version ]]; then
-			if [[ "${SKIP_UPDATE}" == "1" ]]; then
-				echo -e "New update available: $curversion"
-			else
-				echo -e "New update available, downloading version $curversion..."
-				$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -download-path HytaleServer.zip
-			fi
+		if [[ "${SKIP_UPDATE}" == "1" ]]; then
+			echo -e "New update available: $curversion"
+		elif [[ -f version ]]; then
+			echo -e "New update available, downloading version $curversion..."
+			$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -download-path HytaleServer.zip
 		fi
 
 		# Write the current version if it wasn't set before

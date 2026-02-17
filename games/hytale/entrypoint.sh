@@ -21,8 +21,8 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 	if ! [[ -e version ]] || [ "$curversion" != "$(cat "version")" ]; then
 		if [[ "${SKIP_UPDATE}" == "1" ]]; then
 			echo -e "New update available: $curversion"
-		elif [[ -f version ]]; then
-			echo -e "New update available, downloading version $curversion..."
+		else
+			echo -e "New update available, downloading version: $curversion..."
 			$HYTALE_DOWNLOADER -patchline "$HYTALE_PATCHLINE" -download-path HytaleServer.zip
 		fi
 

@@ -3,11 +3,7 @@ set -e
 
 cd /home/container
 
-if [[ "$(uname -m)" == "aarch64" ]]; then
-	HYTALE_DOWNLOADER="qemu-x86_64-static /home/container/hytale-downloader/hytale-downloader-linux"
-else
-	HYTALE_DOWNLOADER="/home/container/hytale-downloader/hytale-downloader-linux"
-fi
+HYTALE_DOWNLOADER="qemu-x86_64-static /home/container/hytale-downloader/hytale-downloader-linux"
 
 # If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
 if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
